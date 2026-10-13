@@ -5,7 +5,7 @@ window.MAP_REFERENCE={source:'swisstopo SWISSIMAGE / OpenStreetMap',center:[47.3
 const status=document.getElementById('mapLoadStatus');
 if(!window.L){status.textContent='地图库未能加载，请刷新重试';return}
 const ref=window.MAP_REFERENCE,bounds=L.latLngBounds([[ref.south,ref.west],[ref.north,ref.east]]);
-const map=window.missionMap=L.map('geoMap',{zoomControl:false,attributionControl:true,minZoom:14,zoomSnap:0.25,maxZoom:19,maxBounds:[[47.36,8.48],[47.44,8.61]],maxBoundsViscosity:.8});
+const map=window.missionMap=L.map('geoMap',{zoomControl:false,attributionControl:true,fadeAnimation:false,zoomAnimation:false,markerZoomAnimation:false,minZoom:14,zoomSnap:0.25,maxZoom:19,maxBounds:[[47.36,8.48],[47.44,8.61]],maxBoundsViscosity:.8});
 const imagery=L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg',{maxZoom:19,attribution:'航空影像 © <a href="https://www.swisstopo.admin.ch/en/orthoimage-swissimage-10" target="_blank" rel="noopener">swisstopo</a>',bounds:[[45.8,5.9],[47.9,10.6]]});
 const streets=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'});
 for(const layer of [imagery,streets]){layer.on('tileerror',()=>{status.textContent='部分底图未加载，可切换底图或检查网络'});layer.on('load',()=>{if(!status.textContent.includes('部分'))status.textContent=''})}
