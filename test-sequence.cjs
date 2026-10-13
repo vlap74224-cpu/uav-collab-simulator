@@ -7,7 +7,7 @@ for(let i=0;i<4;i++){
  assert.deepEqual(m.route.at(-1),S.points[i+1].point);
  assert.deepEqual(C.validate(m.route,m),[]);
  assert.ok(m.battery<=battery);
- if(i===2){assert.equal(m.subtype,'dynamic');assert.ok(C.validate(m.initialRoute,m).length);assert.deepEqual(C.validate(m.alternative,m),[])}
+ if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);assert.deepEqual(C.validate(m.initialRoute,m),[])}
  if(i===3)assert.ok(m.battery<battery);
  battery=m.battery-C.length(m.route)*.016;
  const halfway=C.sample(m.route,.3),resumed=S.make(i,[halfway.x,halfway.y],battery);
