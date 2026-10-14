@@ -19,11 +19,13 @@ try{
  const directions=[['前',0,0],['右',90,0],['后',180,0],['左',270,0],['上',0,1],['下',0,-1]];
  const rows=directions.map(([label])=>{const el=document.createElement('div');el.innerHTML=`<span>${label}</span><b>—</b>`;proximity.querySelector('.proximity-grid').append(el);return el});
  const distanceTag=document.createElement('div');distanceTag.className='surface-distance';distanceTag.hidden=true;document.body.append(distanceTag);let nearestSample=null;
- const tone=d=>d<=5?'danger':d<=15?'warning':'normal';
+ const tone=d=>d<=5?'danger':d<=15?'warning':'normal';let lastProbe='';
  setInterval(()=>{
-  nearestSample=null;if(!ready)return;
+  if(!ready)return;
   const p=cart(state.x,state.y,state.altitude),frame=C.Transforms.eastNorthUpToFixedFrame(p),radius=window.Collision?.radius||1.5;
   const complete=tiles.tilesLoaded&&scene.globe.tilesLoaded&&!loadError;
+  const dynamic=proximity.querySelector('.proximity-target');if(state.traffic){const t=cart(state.traffic.x,state.traffic.y,state.traffic.altitude),d=Math.max(0,C.Cartesian3.distance(p,t)-radius*2);dynamic.textContent=`移动无人机净距 ${d.toFixed(1)} m`;dynamic.dataset.tone=tone(d)}else{dynamic.textContent='移动目标：无';dynamic.dataset.tone='unknown'}
+  const key=[state.x,state.y,state.altitude,state.heading,tilesLoaded,complete].join(':');if(complete&&key===lastProbe)return;lastProbe=key;nearestSample=null;
   directions.forEach(([label,angle,vertical],i)=>{
    try{
     const h=C.Math.toRadians(state.heading+angle),local=vertical?new C.Cartesian3(0,0,vertical):new C.Cartesian3(Math.sin(h),Math.cos(h),0);
@@ -35,8 +37,7 @@ try{
     if(hit&&(!nearestSample||hit.d<nearestSample.d))nearestSample={...hit,label};
    }catch(e){rows[i].dataset.tone='unknown';rows[i].querySelector('b').textContent='不可用'}
   });
-  const dynamic=proximity.querySelector('.proximity-target');if(state.traffic){const t=cart(state.traffic.x,state.traffic.y,state.traffic.altitude),d=Math.max(0,C.Cartesian3.distance(p,t)-radius*2);dynamic.textContent=`移动无人机净距 ${d.toFixed(1)} m`;dynamic.dataset.tone=tone(d)}else{dynamic.textContent='移动目标：无';dynamic.dataset.tone='unknown'}
- },500);
+ },1000);
  scene.postRender.addEventListener(()=>{
   distanceTag.hidden=true;if(!nearestSample)return;const screen=C.SceneTransforms.worldToWindowCoordinates(scene,nearestSample.position);
   if(!screen||screen.x<0||screen.y<0||screen.x>scene.canvas.clientWidth||screen.y>scene.canvas.clientHeight)return;
