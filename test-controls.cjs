@@ -7,3 +7,9 @@ assert.equal(F.vertical(60,65,1).altitude,63);assert.equal(F.vertical(64,65,1).a
 console.log('PASS: 80 destination-to-destination routes; distinct endpoints; travelled segments; climb/descent limits.');
 let p={x:450,y:330,heading:0};assert.equal(F.move(p,{forward:1},1).y,325);assert.equal(F.move(p,{right:1},1).x,455);assert.equal(F.move(p,{turn:1},2).heading,90);assert.equal(F.move({...p,heading:90},{forward:1},1).x,455);assert.ok(Math.abs(F.move(p,{forward:1,right:1},1).distance-5)<1e-8);assert.equal(F.move({x:795,y:35,heading:0},{forward:1,right:1},1).distance,0);
 console.log('PASS: body-relative directional movement, heading rotation, diagonal normalization and map boundary.');
+const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI;
+assert.ok(deg(F.smoothHeading(rad(350),rad(10),.1))>350,'crossing north turns through the shortest positive arc');
+assert.ok(deg(F.smoothHeading(rad(10),rad(350),.1))<10,'reverse crossing turns through the shortest negative arc');
+assert.ok(deg(F.smoothHeading(0,rad(90),1,30,5))<=30.000001,'camera turn respects maximum angular speed');
+let smoothed=0;for(let i=0;i<120;i++)smoothed=F.smoothHeading(smoothed,rad(90),1/60,95,5);assert.ok(Math.abs(deg(smoothed)-90)<1,'camera heading converges smoothly to the new course');
+console.log('PASS: smooth camera heading uses shortest arc, rate limiting and stable convergence.');

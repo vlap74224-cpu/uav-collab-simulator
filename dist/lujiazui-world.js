@@ -2,7 +2,7 @@ import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {MeshBVH} from 'three-mesh-bvh';
 const host=document.getElementById('flightView'),notice=document.getElementById('viewStatus');
-window.worldReady=false;let state={x:330,y:530,heading:0,altitude:60},pitch=38,overview=false;
+window.worldReady=false;let state={x:330,y:530,heading:0,altitude:60},pitch=38,overview=false,cameraHeading=null,lastFrame=0;
 window.flightView={update:s=>state=s,pitch:v=>pitch=+v};
 try{
  const scene=new T.Scene();scene.background=new T.Color('#b9cbd2');scene.fog=new T.Fog('#b9cbd2',650,1450);const surround=new T.Mesh(new T.PlaneGeometry(12000,12000),new T.MeshStandardMaterial({color:0x899488,roughness:1}));surround.rotation.x=-Math.PI/2;surround.position.y=-4;scene.add(surround);const camera=new T.PerspectiveCamera(68,1,.08,2200),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;host.append(renderer.domElement);scene.add(new T.HemisphereLight(0xe5f5ff,0x8a9271,2.5));const sun=new T.DirectionalLight(0xffffff,3);sun.position.set(-300,700,350);scene.add(sun);
@@ -37,7 +37,8 @@ try{
  const viewButton=document.createElement('button');viewButton.textContent='三维地图总览';viewButton.onclick=()=>{overview=!overview;viewButton.textContent=overview?'返回机载视角':'三维地图总览'};document.querySelector('.camera-strip').append(viewButton);
  window.flightView={update:s=>state=s,pitch:v=>pitch=+v,capture:()=>renderer.domElement.toDataURL('image/png')};
  const resize=()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()};addEventListener('resize',resize);resize();
- function draw(now){requestAnimationFrame(draw);const pos=vector(state),heading=state.heading*Math.PI/180;
+ function draw(now){requestAnimationFrame(draw);const pos=vector(state),targetHeading=state.heading*Math.PI/180,dt=lastFrame?Math.min(.1,(now-lastFrame)/1000):0;lastFrame=now;
+  cameraHeading=cameraHeading===null?targetHeading:FlightControls.smoothHeading(cameraHeading,targetHeading,dt,95,5);const heading=cameraHeading;
   if(overview){camera.position.set(680,670,820);camera.lookAt(0,20,0)}else{camera.position.copy(pos);const p=pitch*Math.PI/180;camera.lookAt(pos.clone().add(new T.Vector3(Math.sin(heading)*Math.cos(p),-Math.sin(p),-Math.cos(heading)*Math.cos(p))))}
   traffic.visible=!!state.traffic;if(state.traffic)traffic.position.copy(vector(state.traffic));document.getElementById('trafficMarker').hidden=true;
   if(now-lastProbe>200){lastProbe=now;const horizontal=horizontalLimits(flightSpeed()),vertical=verticalLimits(state.verticalSpeed),conservative={danger:Math.max(horizontal.danger,vertical.danger),warning:Math.max(horizontal.warning,vertical.warning)};panel.querySelector('.proximity-boundary').textContent=`制动 ${horizontal.danger.toFixed(1)} · 预警 ${horizontal.warning.toFixed(1)}`;panel.title=`Mavic 3E/3M 参考边界｜水平速度 ${flightSpeed().toFixed(1)} m/s｜红色 ≤ ${horizontal.danger.toFixed(1)} m｜橙色 ≤ ${horizontal.warning.toFixed(1)} m｜绿色 > ${horizontal.warning.toFixed(1)} m`;closest=nearest(pos);const read=panel.querySelector('.closest-reading');if(closest){const d=Math.max(0,closest.distance-radius);read.textContent=`最近${closest.label} ${d.toFixed(1)} m`;read.dataset.tone=tone(d,conservative)}
