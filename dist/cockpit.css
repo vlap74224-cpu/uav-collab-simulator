@@ -29,3 +29,6 @@ body.map-expanded .minimap{left:18px;right:350px;top:125px;bottom:155px;width:au
 @media(min-width:1100px){footer{left:370px}}
 @media(max-width:1050px){.minimap{width:280px;height:220px}body.map-expanded .minimap{right:305px}}
 @media(max-width:760px){.minimap{width:220px;height:180px;bottom:145px}body.map-expanded .minimap{left:10px;right:10px;top:160px;bottom:145px}}
+
+/* Freehand route planning in the expanded mission map. */
+.route-draw-tools{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:5px;margin:8px 0 4px}.route-draw-tools button{padding:7px 5px;font-size:10px}.route-draw-tools button[aria-pressed="true"]{background:#b5f67b;color:#142319;border-color:#b5f67b}#routeDrawHint{margin:4px 0 7px;color:#b9d8c6}.map-wrap svg#map.route-drawing{pointer-events:all;cursor:crosshair;touch-action:none;user-select:none}.map-wrap svg#map.route-drawing .waypoint,.map-wrap svg#map.route-drawing .destination-marker{pointer-events:none}#map.route-drawing #suggestedRoute{stroke:#47f5be;stroke-width:7;stroke-dasharray:none;filter:drop-shadow(0 0 4px #1cffbb)}
