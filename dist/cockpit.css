@@ -29,6 +29,3 @@ body.map-expanded .minimap{left:18px;right:350px;top:125px;bottom:155px;width:au
 @media(min-width:1100px){footer{left:370px}}
 @media(max-width:1050px){.minimap{width:280px;height:220px}body.map-expanded .minimap{right:305px}}
 @media(max-width:760px){.minimap{width:220px;height:180px;bottom:145px}body.map-expanded .minimap{left:10px;right:10px;top:160px;bottom:145px}}
-
-/* Heading-up navigation map: the aircraft stays centered while the map turns. */
-#geoMap{transform-origin:50% 50%;transition:transform .18s linear;will-change:transform}#map text{transform:rotate(var(--map-label-rotation,0deg));transform-box:fill-box;transform-origin:center}.map-follow-badge{position:absolute;top:7px;left:50%;transform:translateX(-50%);z-index:560;padding:3px 7px;border-radius:4px;background:#0b1d1a99;border:1px solid #76f3be66;color:#78f4c0;font-size:9px;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}.map-tools button{min-width:25px;height:25px;padding:2px 6px;font-weight:700}body:not(.map-expanded) #geoMap.map-following .leaflet-control-container{display:none}body.map-expanded .map-follow-badge{display:none}body.map-expanded #geoMap{transition:none}
