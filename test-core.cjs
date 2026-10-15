@@ -12,6 +12,8 @@ assert.ok(c.validate(c.base, c.scenarios[2]).some(x => x.includes('限制区域'
 assert.ok(c.validate(c.base, c.scenarios[3]).some(x => x.includes('限制区域')));
 assert.ok(c.validate(c.base, c.scenarios[4]).some(x => x.includes('电量')));
 assert.ok(c.validate([[NaN, 1], [2, 3]], c.scenarios[0]).length);
+assert.deepEqual(c.workArea, {minX:-345,maxX:1245,minY:-295,maxY:955});
+assert.ok(c.validate([[-346,0],[0,0]], c.scenarios[0]).some(x=>x.includes('作业区')));
 assert.ok(c.validate(c.base, c.scenarios[0], 500, -1).length === 2);
 assert.equal(c.distanceToSegment([5, 5], [0, 0], [10, 0]), 5);
 assert.equal(c.length([[1, 1], [1, 1]]), 0);

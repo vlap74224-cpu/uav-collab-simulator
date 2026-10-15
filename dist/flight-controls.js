@@ -2,7 +2,7 @@
 const C=typeof module!=='undefined'?require('./core.js'):root.UAV;
 function travelled(route,progress){if(progress<=0)return[route[0].slice()];if(progress>=1)return C.clone(route);const p=C.sample(route,progress);return [...C.clone(route.slice(0,p.next)),[p.x,p.y]]}
 function vertical(altitude,target,dt){const bounded=Math.max(0,Math.min(150,target)),step=Math.sign(bounded-altitude)*Math.min(Math.abs(bounded-altitude),3*Math.max(0,dt));return{altitude:altitude+step,verticalSpeed:dt>0?step/dt:0,target:bounded}}
-function move(position,axes,dt){const heading=(position.heading+(axes.turn||0)*45*dt+360)%360,r=heading*Math.PI/180,forward=axes.forward||0,right=axes.right||0,norm=Math.max(1,Math.hypot(forward,right)),speed=5/norm;const x=Math.max(105,Math.min(795,position.x+(Math.sin(r)*forward+Math.cos(r)*right)*speed*dt)),y=Math.max(35,Math.min(625,position.y+(-Math.cos(r)*forward+Math.sin(r)*right)*speed*dt));return{x,y,heading,distance:Math.hypot(x-position.x,y-position.y)}}
+function move(position,axes,dt){const heading=(position.heading+(axes.turn||0)*45*dt+360)%360,r=heading*Math.PI/180,forward=axes.forward||0,right=axes.right||0,norm=Math.max(1,Math.hypot(forward,right)),speed=5/norm,a=C.workArea;const x=Math.max(a.minX,Math.min(a.maxX,position.x+(Math.sin(r)*forward+Math.cos(r)*right)*speed*dt)),y=Math.max(a.minY,Math.min(a.maxY,position.y+(-Math.cos(r)*forward+Math.sin(r)*right)*speed*dt));return{x,y,heading,distance:Math.hypot(x-position.x,y-position.y)}}
 function smoothHeading(current,target,dt,maxRate=95,response=5){
  const delta=Math.atan2(Math.sin(target-current),Math.cos(target-current));
  if(!Number.isFinite(current)||!Number.isFinite(target)||!Number.isFinite(dt)||dt<=0)return Number.isFinite(current)?current:target;

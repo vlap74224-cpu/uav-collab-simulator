@@ -1,6 +1,7 @@
 (function(root){
 'use strict';
 const base=[[130,525],[225,325],[455,175],[730,220],[670,520],[130,525]];
+const workArea={minX:-345,maxX:1245,minY:-295,maxY:955};
 const clone=x=>JSON.parse(JSON.stringify(x));
 const scenarios=[
 {id:'N1',name:'航迹跟随',subtitle:'常规巡检 · 航点复核',event:'正常前往 WP 01，既定航迹等待复核。',title:'保持既定航迹，继续巡检',summary:'依次经过四个巡检航点后返回起降区。请复核路线并决定是否继续。',goal:'完成园区四点巡检并返回起降区',reason:'当前情境未设置新增障碍或交通冲突；既定路线覆盖全部巡检点，保持路线可避免额外绕行。',limits:'场景采用静态地形与恒定风假设；未模拟真实定位误差。',history:'无既往执行样本；不提供历史成功率。',error:'未建立校准的出错概率模型。',route:base,alternative:[[130,525],[200,290],[455,150],[765,235],[670,520],[130,525]],battery:82},
@@ -11,8 +12,8 @@ const scenarios=[
 ];
 function length(route){return route.slice(1).reduce((n,p,i)=>n+Math.hypot(p[0]-route[i][0],p[1]-route[i][1]),0)}
 function distanceToSegment(p,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],den=dx*dx+dy*dy;const t=den?Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/den)):0;return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy)}
-function validate(route,scenario,altitude=60,speed=8){const errors=[];if(!Array.isArray(route)||route.length<2||route.some(p=>!Array.isArray(p)||p.length!==2||p.some(v=>!Number.isFinite(v))))return ['航点数据无效'];if(!Number.isFinite(altitude)||altitude<0||altitude>150)errors.push('高度需在 0–150 m 之间');if(!Number.isFinite(speed)||speed<2||speed>12)errors.push('速度需在 2–12 m/s 之间');if(route.some(p=>p[0]<105||p[0]>795||p[1]<35||p[1]>625))errors.push('航点超出演示作业区');if(scenario.hazard&&route.slice(1).some((p,i)=>distanceToSegment([scenario.hazard.x,scenario.hazard.y],route[i],p)<scenario.hazard.r+scenario.hazard.margin))errors.push('路线进入限制区域或预设交通缓冲区');if(scenario.battery-length(route)*.016<15)errors.push('预计返航电量低于模拟余量 15%');return errors}
+function validate(route,scenario,altitude=60,speed=8){const errors=[];if(!Array.isArray(route)||route.length<2||route.some(p=>!Array.isArray(p)||p.length!==2||p.some(v=>!Number.isFinite(v))))return ['航点数据无效'];if(!Number.isFinite(altitude)||altitude<0||altitude>150)errors.push('高度需在 0–150 m 之间');if(!Number.isFinite(speed)||speed<2||speed>12)errors.push('速度需在 2–12 m/s 之间');if(route.some(p=>p[0]<workArea.minX||p[0]>workArea.maxX||p[1]<workArea.minY||p[1]>workArea.maxY))errors.push('航点超出演示作业区');if(scenario.hazard&&route.slice(1).some((p,i)=>distanceToSegment([scenario.hazard.x,scenario.hazard.y],route[i],p)<scenario.hazard.r+scenario.hazard.margin))errors.push('路线进入限制区域或预设交通缓冲区');if(scenario.battery-length(route)*.016<15)errors.push('预计返航电量低于模拟余量 15%');return errors}
 function estimate(route,battery,speed){const meters=length(route);return{distance:Math.round(meters),seconds:Math.round(meters/speed),endBattery:Math.max(0,Math.round((battery-meters*.016)*10)/10)}}
 function sample(route,progress){const total=length(route);let remaining=Math.max(0,Math.min(1,progress))*total;for(let i=1;i<route.length;i++){const a=route[i-1],b=route[i],seg=Math.hypot(b[0]-a[0],b[1]-a[1]);if(remaining<=seg&&seg>0)return{x:a[0]+(b[0]-a[0])*remaining/seg,y:a[1]+(b[1]-a[1])*remaining/seg,heading:Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI+90,next:i};remaining-=seg}const p=route[route.length-1];return{x:p[0],y:p[1],heading:0,next:route.length-1}}
-const api={base,scenarios,clone,length,validate,estimate,sample,distanceToSegment};if(typeof module!=='undefined')module.exports=api;else root.UAV=api;
+const api={base,workArea,scenarios,clone,length,validate,estimate,sample,distanceToSegment};if(typeof module!=='undefined')module.exports=api;else root.UAV=api;
 })(typeof window!=='undefined'?window:globalThis);
