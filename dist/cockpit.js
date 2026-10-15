@@ -1,14 +1,24 @@
 'use strict';
-const $=id=>document.getElementById(id),C=UAV,M=Missions,KEY='uav-collab-v1',VERSION='4.0.0';
+const $=id=>document.getElementById(id),C=UAV,M=Missions,KEY='uav-collab-v1',LEGACY_KEY='uav-before-lujiazui-v4',VERSION='4.0.1';
 let manualInputs=new Map(),joystick={forward:0,right:0},manualBlocked=false;
 let records=[],session,trial,state,mission=null,draft=null,drag=null,last=performance.now(),lastSave=0;
 function config(){try{const c=JSON.parse(localStorage.getItem('uav-research-config-v1')||'{}');return{participant:c.participant||'P001',condition:['action','reason','projection'].includes(c.condition)?c.condition:'action',node:M.categories[c.node]?c.node:'N1',subtype:c.subtype==='dynamic'?'dynamic':'static'}}catch{return{participant:'P001',condition:'action',node:'N1',subtype:'static'}}}
 function fresh(){manualInputs.clear();joystick={forward:0,right:0};session={id:crypto.randomUUID(),...config()};trial=crypto.randomUUID();mission=null;draft=null;state={status:'ready',route:[[330,530],[330,529]],progress:0,altitude:60,speed:12,battery:82,simTime:0,goalDeferred:false,targetAltitude:60,trail:[[330,530]]};}
 function snap(){return C.clone({state,mission,session})}
-function save(){try{localStorage.setItem(KEY,JSON.stringify({version:VERSION,records,session,trial,node:session.node,state,mission}))}catch{toast('记录保存失败，请检查浏览器存储并及时导出')}}
+function payload(){return JSON.stringify({version:VERSION,records,session,trial,node:session.node,state,mission})}
+function save(){try{localStorage.setItem(KEY,payload());return true}catch{try{localStorage.removeItem(LEGACY_KEY);localStorage.setItem(KEY,payload());return true}catch{toast('记录保存失败：浏览器存储空间不足，请先导出或清空记录');return false}}}
 function log(type,label,detail='',before=null){records.push({id:crypto.randomUUID(),version:VERSION,timestamp:new Date().toISOString(),sessionId:session.id,participant:session.participant,condition:session.condition,trialId:trial,node:session.node,obstacleSubtype:mission?.subtype||null,destination:mission?.destination||null,goalDeferred:state.goalDeferred,type,label,detail,reactionMs:['accept','reject','modify_apply'].includes(type)&&state.presentedAt?Date.now()-state.presentedAt:null,before,after:snap(),stimulus:type==='present'?C.clone(mission):undefined});save()}
 let toastTimer;function toast(t){$('toast').textContent=t;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').textContent='',4000)}
-try{const old=JSON.parse(localStorage.getItem(KEY)||'null');if(old&&old.version!==VERSION&&!localStorage.getItem('uav-before-lujiazui-v4'))localStorage.setItem('uav-before-lujiazui-v4',JSON.stringify(old));if(old&&Array.isArray(old.records))records=old.records;if([VERSION].includes(old?.version)&&old.session&&old.state){session=old.session;trial=old.trial;state=old.state;mission=old.mission;if(state.status==='waiting'){state.resumeWaiting=true;state.status='paused'}if(state.status==='running')state.status='paused';state.manualSpeed=0;if(state.status==='editing')state.status='review';state.targetAltitude=state.altitude;state.trail=state.trail||FlightControls.travelled(state.route,state.progress);log('restore','恢复任务','刷新后保持暂停')}else{fresh();log('session_start','开始会话',old?'升级界面，保留既往记录':'进入飞行界面')}}catch{fresh();toast('旧记录无法读取；本次不会覆盖旧记录，请先联系研究者');throw Error('Stored data unavailable')}
+let storageReset=false;
+try{
+ const clearRequested=new URLSearchParams(location.search).get('clearRecords')==='1';
+ if(clearRequested){localStorage.removeItem(KEY);localStorage.removeItem(LEGACY_KEY);localStorage.removeItem('uav-research-config-v1');storageReset=true;history.replaceState(null,'',location.pathname)}
+ let old=null,raw=localStorage.getItem(KEY);
+ if(raw){try{old=JSON.parse(raw)}catch{localStorage.removeItem(KEY);storageReset=true}}
+ if(old?.version===VERSION&&Array.isArray(old.records)&&old.session&&old.state){records=old.records;session=old.session;trial=old.trial;state=old.state;mission=old.mission;if(state.status==='waiting'){state.resumeWaiting=true;state.status='paused'}if(state.status==='running')state.status='paused';state.manualSpeed=0;if(state.status==='editing')state.status='review';state.targetAltitude=state.altitude;state.trail=state.trail||FlightControls.travelled(state.route,state.progress);log('restore','恢复任务','刷新后保持暂停')}
+ else{if(old){localStorage.removeItem(KEY);localStorage.removeItem(LEGACY_KEY);storageReset=true}records=[];fresh();log('session_start','开始会话',storageReset?'已清理不兼容记录并建立新会话':'进入飞行界面')}
+}catch{try{localStorage.removeItem(KEY);localStorage.removeItem(LEGACY_KEY)}catch{}records=[];fresh();save();storageReset=true}
+if(storageReset)setTimeout(()=>toast('旧记录已清理，新的实验会话可以正常保存'),0);
 $('destinationList').innerHTML=Sequence.points.map((p,i)=>'<div class=sequence-stop><b>'+p.name+'</b><small>'+(['N1 航迹跟随','N2 航迹转向','N4 动态冲突','N5 资源可行性下降','任务终点'][i])+'</small></div>').join('');
 function planDestination(dest){
  if(state.sequence){presentStage(state.sequence.index,true);return}
