@@ -25,4 +25,5 @@ for(let i=0;i<4;i++){
  assert.ok(resumed.battery<=battery);
 }
 assert.ok(battery>=15);console.log('Four sequential events, endpoints, collision clearance, resource drop and resumption passed.');
-assert.deepEqual(S.landmarks.map(x=>x.shortName),['东方明珠','金茂大厦','环球金融中心']);
+assert.equal(S.landmarks.length,16);
+for(const name of ['东方明珠','上海中心','金茂大厦','环球金融中心','震旦大厦','香格里拉酒店','招商局大厦','时代金融'])assert.ok(S.landmarks.some(x=>x.shortName===name));
