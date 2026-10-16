@@ -11,6 +11,8 @@ for(let i=0;i<4;i++){
   assert.equal(m.route.length,13);
   assert.equal(m.photoCheckpoint.routeIndex,6);
   assert.equal(m.photoCheckpoint.landmarkId,'oriental-pearl');
+  assert.deepEqual(m.photoCheckpoint.target,[-117,170]);
+  assert.equal(m.photoCheckpoint.targetAltitude,120);
   assert.equal(m.routeRevision,'n1-oriental-pearl-v1');
   assert.deepEqual(m.photoCheckpoint.point,m.route[6]);
   assert.ok(m.photoCheckpoint.progress>.4&&m.photoCheckpoint.progress<.8);
