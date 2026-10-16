@@ -16,6 +16,7 @@ function make(index,origin,battery){
   m.alternative=[a,[250,520],[150,475],[55,395],[-20,300],[20,170],[105,225],[220,300],b];
   const checkpoint=m.route[6];
   m.photoCheckpoint={id:'N1-PHOTO-1',name:'东方明珠拍照打卡点',landmarkId:'oriental-pearl',point:checkpoint.slice(),routeIndex:6,progress:C.length(m.route.slice(0,7))/C.length(m.route)};
+  m.routeRevision='n1-oriental-pearl-v1';
   m.title='绕行建筑群，前往东方明珠拍照打卡';
   m.reason='N1 沿道路和开阔区设置连续转向航点，避开建筑体积后抵达东方明珠东侧观察点；完成拍照打卡，再沿通过实体碰撞校验的通道前往 B 点。';
  }
