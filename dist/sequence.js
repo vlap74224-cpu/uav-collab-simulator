@@ -3,20 +3,20 @@ const C=typeof module!=='undefined'?require('./core.js'):root.UAV;
 const points=[{id:'home',name:'A · 起降区',point:[330,530]},{id:'lake',name:'B · 湖边巡检点',point:[350,330]},{id:'north',name:'C · 公园北侧入口',point:[480,230]},{id:'building',name:'D · 建筑巡检点',point:[560,400]},{id:'east',name:'E · 东侧终点',point:[450,550]}];
 const landmarks=[
  {id:'oriental-pearl',name:'东方明珠广播电视塔',shortName:'东方明珠',point:[-117,170],height:468,tier:1},
- {id:'aurora',name:'震旦国际大楼',shortName:'震旦大厦',point:[-156.3,625.5],height:128,tier:1},
- {id:'mirae-asset',name:'未来资产大厦',shortName:'未来资产大厦',point:[-163,683.5],height:138,tier:1},
- {id:'pudong-shangrila',name:'浦东香格里拉酒店',shortName:'香格里拉酒店',point:[-285.9,619.9],height:151,tier:1},
+ {id:'aurora',name:'震旦国际大楼',shortName:'震旦大厦',point:[-228.5,748.9],height:128,tier:1},
+ {id:'mirae-asset',name:'未来资产大厦',shortName:'未来资产大厦',point:[-163,682.8],height:138,tier:1},
+ {id:'pudong-shangrila',name:'浦东香格里拉酒店',shortName:'香格里拉酒店',point:[-285,616.5],height:151,tier:1},
  {id:'shanghai-tower',name:'上海中心大厦',shortName:'上海中心',point:[241.8,895.7],height:632,tier:1},
  {id:'jin-mao',name:'金茂大厦',shortName:'金茂大厦',point:[346,750],height:421,tier:1},
  {id:'swfc',name:'上海环球金融中心',shortName:'环球金融中心',point:[493,840],height:492,tier:1},
  {id:'golden-landmark',name:'上海黄金置地大厦',shortName:'黄金置地大厦',point:[405.7,155.7],height:180,tier:2},
- {id:'hsbc',name:'汇丰银行大楼',shortName:'汇丰银行',point:[557.7,199.7],height:160,tier:2},
- {id:'huaneng-united',name:'华能联合大厦',shortName:'华能联合大厦',point:[627,222.7],height:171,tier:2},
+ {id:'hsbc',name:'汇丰银行大楼',shortName:'汇丰银行',point:[557.8,199.7],height:160,tier:2},
+ {id:'huaneng-united',name:'华能联合大厦',shortName:'华能联合大厦',point:[617.1,328],height:171,tier:2},
  {id:'huaxia-bank',name:'华夏银行大厦',shortName:'华夏银行',point:[692.6,263.5],height:131,tier:2},
- {id:'times-finance',name:'时代金融中心',shortName:'时代金融',point:[507.7,86.5],height:170,tier:2},
- {id:'yincheng-10',name:'银城中路十号大厦',shortName:'银城中路10号',point:[602.7,32.4],height:160,tier:2},
- {id:'cmg-tower',name:'招商局大厦',shortName:'招商局大厦',point:[694.3,515.2],height:173,tier:2},
- {id:'new-shanghai-international',name:'新上海国际大厦',shortName:'新上海国际',point:[750.6,373],height:128,tier:2},
+ {id:'times-finance',name:'时代金融中心',shortName:'时代金融',point:[508,81.6],height:170,tier:2},
+ {id:'yincheng-10',name:'银城中路十号大厦',shortName:'银城中路10号',point:[603.2,32.4],height:160,tier:2},
+ {id:'cmg-tower',name:'招商局大厦',shortName:'招商局大厦',point:[696,516.8],height:173,tier:2},
+ {id:'new-shanghai-international',name:'新上海国际大厦',shortName:'新上海国际',point:[750.8,372.8],height:128,tier:2},
  {id:'shanghai-information',name:'上海信息大楼',shortName:'上海信息大楼',point:[822.7,764],height:147,tier:2}
 ];
 const nodes=['N1','N2','N4','N5'];
