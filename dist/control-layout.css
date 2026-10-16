@@ -2,7 +2,7 @@
 .map-steering {
   position: fixed;
   left: 18px;
-  bottom: 7px;
+  bottom: 43px;
   width: 330px;
   min-height: 64px;
   padding: 7px 8px;
@@ -33,7 +33,7 @@
   font-size: 11px;
 }
 
-.minimap { bottom: 79px; }
+.minimap { bottom: 115px; }
 
 .direction-console {
   display: flex;
