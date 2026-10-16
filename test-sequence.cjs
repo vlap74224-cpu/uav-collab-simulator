@@ -8,9 +8,10 @@ for(let i=0;i<4;i++){
  assert.deepEqual(C.validate(m.route,m),[]);
  assert.ok(m.battery<=battery);
  if(i===0){
-  assert.equal(m.route.length,6);
-  assert.equal(m.photoCheckpoint.routeIndex,3);
-  assert.deepEqual(m.photoCheckpoint.point,m.route[3]);
+  assert.equal(m.route.length,13);
+  assert.equal(m.photoCheckpoint.routeIndex,6);
+  assert.equal(m.photoCheckpoint.landmarkId,'oriental-pearl');
+  assert.deepEqual(m.photoCheckpoint.point,m.route[6]);
   assert.ok(m.photoCheckpoint.progress>.4&&m.photoCheckpoint.progress<.8);
  }
  if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);assert.deepEqual(C.validate(m.initialRoute,m),[])}
@@ -21,3 +22,4 @@ for(let i=0;i<4;i++){
  assert.ok(resumed.battery<=battery);
 }
 assert.ok(battery>=15);console.log('Four sequential events, endpoints, collision clearance, resource drop and resumption passed.');
+assert.deepEqual(S.landmarks.map(x=>x.shortName),['东方明珠','金茂大厦','环球金融中心']);
