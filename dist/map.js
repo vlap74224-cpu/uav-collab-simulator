@@ -3,6 +3,7 @@ window.MAP_REFERENCE={source:'用户提供的陆家嘴完整边界模型',localG
 (function(){
 const width=1800,height=1320,minX=-450,maxY=990,bounds=L.latLngBounds([[0,0],[height,width]]),map=window.missionMap=L.map('geoMap',{crs:L.CRS.Simple,zoomControl:false,minZoom:-4,maxZoom:3,zoomSnap:.25});
 L.imageOverlay('assets/lujiazui-map.png?v=expanded1',bounds).addTo(map);L.svgOverlay(document.getElementById('map'),bounds,{interactive:true}).addTo(map);let routeBounds=bounds;
+const buildingLabelLayer=L.layerGroup().addTo(map);window.renderMapBuildingLabels=landmarks=>{buildingLabelLayer.clearLayers();for(const landmark of landmarks||[]){const label=document.createElement('span');label.textContent=landmark.shortName||landmark.name;label.title=landmark.name;const icon=L.divIcon({className:'map-building-label',html:label,iconSize:null,iconAnchor:[0,12]});L.marker([maxY-landmark.point[1],landmark.point[0]-minX],{icon,interactive:false,keyboard:false,zIndexOffset:800}).addTo(buildingLabelLayer)}};
 window.focusMissionRoute=points=>{routeBounds=L.latLngBounds(points.map(p=>[maxY-p[1],p[0]-minX])).pad(.4);map.fitBounds(routeBounds,{padding:[20,20]})};
 L.control.zoom({position:'topright',zoomInTitle:'放大',zoomOutTitle:'缩小'}).addTo(map);map.fitBounds(bounds);
 document.getElementById('fitMap').onclick=()=>map.fitBounds(routeBounds);document.getElementById('baseLayer').hidden=true;document.getElementById('mapLoadStatus').textContent='陆家嘴扩大模型 · 1800 × 1320 m';
