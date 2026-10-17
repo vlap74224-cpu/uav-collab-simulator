@@ -8,14 +8,16 @@ for(let i=0;i<4;i++){
  assert.deepEqual(C.validate(m.route,m),[]);
  assert.ok(m.battery<=battery);
  if(i===0){
-  assert.equal(m.route.length,14);
-  assert.equal(m.photoCheckpoint.routeIndex,6);
-  assert.equal(m.photoCheckpoint.landmarkId,'oriental-pearl');
-  assert.deepEqual(m.photoCheckpoint.target,[-117,170]);
-  assert.equal(m.photoCheckpoint.targetAltitude,120);
-  assert.equal(m.routeRevision,'n1-oriental-pearl-v2');
-  assert.deepEqual(m.photoCheckpoint.point,m.route[6]);
-  assert.ok(m.photoCheckpoint.progress>.4&&m.photoCheckpoint.progress<.8);
+  assert.equal(m.route.length,6);
+  assert.equal(m.routeRevision,'n1-open-corridor-checkpoints-v4');
+  assert.equal(m.photoCheckpoints.length,3);
+  assert.deepEqual(m.photoCheckpoints.map(x=>x.routeIndex),[1,2,3]);
+  assert.deepEqual(m.photoCheckpoints.map(x=>x.point),[m.route[1],m.route[2],m.route[3]]);
+  assert.deepEqual(m.photoCheckpoints[0].target,[-117,170]);
+  assert.equal(m.photoCheckpoints[1].targetAltitude,150);
+  assert.deepEqual(m.photoCheckpoints[2].target,[310,350]);
+  assert.ok(m.photoCheckpoints.every((x,j,a)=>j===0||x.progress>a[j-1].progress));
+  assert.equal(m.photoCheckpoint,m.photoCheckpoints[0]);
  }
  if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);assert.deepEqual(C.validate(m.initialRoute,m),[])}
  if(i===3)assert.ok(m.battery<battery);
