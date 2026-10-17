@@ -8,14 +8,16 @@ for(let i=0;i<4;i++){
  assert.deepEqual(C.validate(m.route,m),[]);
  assert.ok(m.battery<=battery);
  if(i===0){
-  assert.equal(m.route.length,6);
-  assert.equal(m.routeRevision,'n1-open-corridor-checkpoints-v5');
-  assert.equal(m.photoCheckpoints.length,3);
-  assert.deepEqual(m.photoCheckpoints.map(x=>x.routeIndex),[1,2,3]);
-  assert.deepEqual(m.photoCheckpoints.map(x=>x.point),[m.route[1],m.route[2],m.route[3]]);
-  assert.deepEqual(m.photoCheckpoints[0].target,[-117,170]);
-  assert.equal(m.photoCheckpoints[1].targetAltitude,150);
-  assert.deepEqual(m.photoCheckpoints[2].target,[310,350]);
+  assert.equal(m.route.length,8);
+  assert.equal(m.routeRevision,'n1-left-building-tour-v6');
+  assert.equal(m.photoCheckpoints.length,4);
+  assert.deepEqual(m.photoCheckpoints.map(x=>x.routeIndex),[1,2,3,5]);
+  assert.deepEqual(m.photoCheckpoints.map(x=>x.point),[m.route[1],m.route[2],m.route[3],m.route[5]]);
+  assert.deepEqual(m.photoCheckpoints[0].target,[-225,595]);
+  assert.deepEqual(m.photoCheckpoints[1].target,[-163,682.8]);
+  assert.deepEqual(m.photoCheckpoints[2].target,[-228.5,748.9]);
+  assert.deepEqual(m.photoCheckpoints[3].target,[-117,170]);
+  assert.equal(m.photoCheckpoints[3].targetAltitude,150);
   assert.ok(m.photoCheckpoints.every((x,j,a)=>j===0||x.progress>a[j-1].progress));
   assert.equal(m.photoCheckpoint,m.photoCheckpoints[0]);
  }
