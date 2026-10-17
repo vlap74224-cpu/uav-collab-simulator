@@ -8,18 +8,21 @@ for(let i=0;i<4;i++){
  assert.deepEqual(C.validate(m.route,m),[]);
  assert.ok(m.battery<=battery);
  if(i===0){
-  assert.equal(m.route.length,8);
-  assert.equal(m.routeRevision,'n1-left-building-tour-v6');
+  assert.equal(m.route.length,10);
+  assert.equal(m.routeRevision,'n1-noncrossing-ring-v7');
   assert.equal(m.photoCheckpoints.length,4);
-  assert.deepEqual(m.photoCheckpoints.map(x=>x.routeIndex),[1,2,3,5]);
-  assert.deepEqual(m.photoCheckpoints.map(x=>x.point),[m.route[1],m.route[2],m.route[3],m.route[5]]);
-  assert.deepEqual(m.photoCheckpoints[0].target,[-225,595]);
+  assert.deepEqual(m.photoCheckpoints.map(x=>x.routeIndex),[2,3,4,7]);
+  assert.deepEqual(m.photoCheckpoints.map(x=>x.point),[m.route[2],m.route[3],m.route[4],m.route[7]]);
+  assert.deepEqual(m.photoCheckpoints[0].target,[-228.5,748.9]);
   assert.deepEqual(m.photoCheckpoints[1].target,[-163,682.8]);
-  assert.deepEqual(m.photoCheckpoints[2].target,[-228.5,748.9]);
+  assert.deepEqual(m.photoCheckpoints[2].target,[-225,595]);
   assert.deepEqual(m.photoCheckpoints[3].target,[-117,170]);
   assert.equal(m.photoCheckpoints[3].targetAltitude,150);
   assert.ok(m.photoCheckpoints.every((x,j,a)=>j===0||x.progress>a[j-1].progress));
   assert.equal(m.photoCheckpoint,m.photoCheckpoints[0]);
+  const orient=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+  const crosses=(a,b,c,d)=>orient(a,b,c)*orient(a,b,d)<0&&orient(c,d,a)*orient(c,d,b)<0;
+  for(let a=0;a<m.route.length-1;a++)for(let b=a+2;b<m.route.length-1;b++)assert.equal(crosses(m.route[a],m.route[a+1],m.route[b],m.route[b+1]),false,`N1 route segments ${a} and ${b} cross`);
  }
  if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);assert.deepEqual(C.validate(m.initialRoute,m),[])}
  if(i===3)assert.ok(m.battery<battery);

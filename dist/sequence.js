@@ -23,26 +23,26 @@ function make(index,origin,battery){
  const a=origin.slice(),b=points[index+1].point.slice(),dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy),p=(t,k=0)=>[a[0]+dx*t-dy/len*k,a[1]+dy*t+dx/len*k];
  const m={id:nodes[index],name:['航迹跟随','航迹转向','动态冲突','资源可行性下降'][index],destination:points[index+1],route:[a,b],initialRoute:[a,b],alternative:[a,p(.5,25),b],battery,subtype:null,limits:'陆家嘴完整预载实体场景；树林、缓坡和事件为实验补建。净距与碰撞基于同一模型网格。安全色带以 Mavic 3E/3M 性能为参考并随速度更新，属于实验告警值。',error:'未建立校准的出错概率模型。',history:'暂无经过验证的历史执行表现。'};
  if(index===0){
-  m.route=[a,[-100,620],[-100,680],[-100,740],[120,500],[-30,260],[180,440],b];
+  m.route=[a,[0,620],[-100,740],[-100,680],[-100,620],[90,530],[120,470],[-30,260],[180,440],b];
   m.initialRoute=C.clone(m.route);
   m.alternative=C.clone(m.route);
   const photo=(id,name,shortName,routeIndex,target,targetName,targetAltitude=120)=>({id,name,shortName,point:m.route[routeIndex].slice(),target:target.slice(),targetName,targetAltitude,routeIndex,progress:C.length(m.route.slice(0,routeIndex+1))/C.length(m.route)});
   m.photoCheckpoints=[
-   photo('N1-PHOTO-1','香格里拉酒店拍照打卡','香格里拉打卡',1,landmarks[3].point,'香格里拉酒店',120),
-   photo('N1-PHOTO-2','未来资产大厦拍照打卡','未来资产打卡',2,landmarks[2].point,'未来资产大厦',115),
-   photo('N1-PHOTO-3','震旦大厦拍照打卡','震旦大厦打卡',3,landmarks[1].point,'震旦大厦',110),
-   photo('N1-PHOTO-4','东方明珠全景拍照打卡','东方明珠打卡',5,landmarks[0].point,'东方明珠',150)
+   photo('N1-PHOTO-1','震旦大厦拍照打卡','震旦大厦打卡',2,landmarks[1].point,'震旦大厦',110),
+   photo('N1-PHOTO-2','未来资产大厦拍照打卡','未来资产打卡',3,landmarks[2].point,'未来资产大厦',115),
+   photo('N1-PHOTO-3','香格里拉酒店拍照打卡','香格里拉打卡',4,landmarks[3].point,'香格里拉酒店',120),
+   photo('N1-PHOTO-4','东方明珠全景拍照打卡','东方明珠打卡',7,landmarks[0].point,'东方明珠',150)
   ];
   m.photoCheckpoint=m.photoCheckpoints[0];
-  m.routeRevision='n1-left-building-tour-v6';
-  m.title='巡游左侧建筑群与东方明珠，完成四个拍照打卡点';
-  m.reason='N1 先沿左侧平直观察通道依次经过香格里拉酒店、未来资产大厦和震旦大厦，再绕行至东方明珠后前往 B 点；7 个航段均按完整三维网格检查，最小净距约 23.5 m。';
+  m.routeRevision='n1-noncrossing-ring-v7';
+  m.title='沿无交叉环线巡游左侧建筑群与东方明珠';
+  m.reason='N1 采用顺时针单向环线，依次经过震旦大厦、未来资产大厦、香格里拉酒店和东方明珠后前往 B 点；9 个航段互不交叉，并全部通过完整三维网格净距检查。';
  }
  if(index===1){m.title='在 B 点转向，继续前往 C';m.reason='当前位于 B 点；下一目标位于北侧，需调整航向后进入 B → C 航段。';}
  if(index===2){m.title='沿 C → D 飞行，监测移动目标';m.subtype='dynamic';m.reason='交通目标以 9 m/s 穿越本航段；起飞后按双方位置和速度持续预测未来 30 秒的最近间隔。';m.limits+=' 采用匀速交通目标和三维间隔预测，40 m 为实验告警阈值，非真实适航标准。';}
  if(index===3){m.battery=Math.min(battery,Math.ceil(C.length([a,b])*.016+17));m.alternative=[a,points[0].point.slice()];m.title='电量余量下降，选择继续或返航';m.reason='实验注入电量下降。按固定每米耗电模型，直达 E 尚可保留 15% 余量；返航方案需单独检查，可能因距离过长而不可行。';m.limits+=' 能耗未计风速、载荷和电池老化。';}
  m.event=`${m.id} ${m.name} · ${'ABCDE'[index]} → ${'ABCDE'[index+1]}`;m.summary=m.title+'。请接受、修改或拒绝；确认后继续同一任务。';
- if(index===0)m.summary='路线包含 7 个航段和 4 个拍照打卡点；左侧三座建筑采用同一条平直观察通道，完整模型计算的最小净距约 23.5 m，高于 21.8 m 绿色预警线。请先复核路线。';
+ if(index===0)m.summary='路线包含 9 个互不交叉的航段和 4 个拍照打卡点；完整模型计算的最小净距约 23.5 m，高于 21.8 m 绿色预警线。请先复核路线。';
  return m;
 }
 const api={points,landmarks,nodes,make};if(typeof module!=='undefined')module.exports=api;else root.Sequence=api;
