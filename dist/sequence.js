@@ -33,7 +33,7 @@ function make(index,origin,battery){
    photo('N1-PHOTO-3','中心绿地全景拍照打卡','绿地打卡',3,[310,350],'中心绿地',90)
   ];
   m.photoCheckpoint=m.photoCheckpoints[0];
-  m.routeRevision='n1-open-corridor-checkpoints-v4';
+  m.routeRevision='n1-open-corridor-checkpoints-v5';
   m.title='沿开阔通道飞行，依次完成三个拍照打卡点';
   m.reason='N1 将原有回折路线压缩为 5 个航段，沿滨江和中心绿地的开阔通道飞行；三个观察点位于同一主通道上，只保留两处主要转向，并减少贴近建筑墙体的航段。';
  }

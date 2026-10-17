@@ -9,7 +9,7 @@ for(let i=0;i<4;i++){
  assert.ok(m.battery<=battery);
  if(i===0){
   assert.equal(m.route.length,6);
-  assert.equal(m.routeRevision,'n1-open-corridor-checkpoints-v4');
+  assert.equal(m.routeRevision,'n1-open-corridor-checkpoints-v5');
   assert.equal(m.photoCheckpoints.length,3);
   assert.deepEqual(m.photoCheckpoints.map(x=>x.routeIndex),[1,2,3]);
   assert.deepEqual(m.photoCheckpoints.map(x=>x.point),[m.route[1],m.route[2],m.route[3]]);
