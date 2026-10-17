@@ -8,11 +8,11 @@ for(let i=0;i<4;i++){
  assert.deepEqual(C.validate(m.route,m),[]);
  assert.ok(m.battery<=battery);
  if(i===0){
-  assert.equal(m.route.length,9);
-  assert.equal(m.routeRevision,'n1-single-detour-v8');
+  assert.equal(m.route.length,12);
+  assert.equal(m.routeRevision,'n1-user-drawn-ring-v9');
   assert.equal(m.photoCheckpoints.length,4);
-  assert.deepEqual(m.photoCheckpoints.map(x=>x.routeIndex),[2,3,4,6]);
-  assert.deepEqual(m.photoCheckpoints.map(x=>x.point),[m.route[2],m.route[3],m.route[4],m.route[6]]);
+  assert.deepEqual(m.photoCheckpoints.map(x=>x.routeIndex),[2,3,4,7]);
+  assert.deepEqual(m.photoCheckpoints.map(x=>x.point),[m.route[2],m.route[3],m.route[4],m.route[7]]);
   assert.deepEqual(m.photoCheckpoints[0].target,[-228.5,748.9]);
   assert.deepEqual(m.photoCheckpoints[1].target,[-163,682.8]);
   assert.deepEqual(m.photoCheckpoints[2].target,[-225,595]);
