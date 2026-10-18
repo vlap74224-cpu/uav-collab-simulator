@@ -24,6 +24,18 @@ for(let i=0;i<4;i++){
   const crosses=(a,b,c,d)=>orient(a,b,c)*orient(a,b,d)<0&&orient(c,d,a)*orient(c,d,b)<0;
   for(let a=0;a<m.route.length-1;a++)for(let b=a+2;b<m.route.length-1;b++)assert.equal(crosses(m.route[a],m.route[a+1],m.route[b],m.route[b+1]),false,`N1 route segments ${a} and ${b} cross`);
  }
+ if(i===1){
+  assert.equal(m.route.length,4);
+  assert.equal(m.routeRevision,'n2-temporary-no-fly-v2');
+  assert.ok(C.length(m.route)>1000);
+  assert.equal(m.plannedNoFlyZone.label,'大型活动临时禁飞区');
+  assert.deepEqual(m.initialRoute,m.route);
+  const zone={...m,hazard:m.plannedNoFlyZone};
+  assert.ok(C.validate(m.initialRoute,zone).length>0,'original N2 route should enter the newly announced no-fly zone');
+  const trigger=C.sample(m.route,m.plannedNoFlyZone.triggerProgress),detours=S.n2Detours([trigger.x,trigger.y],m.destination.point);
+  assert.equal(detours.length,2);
+  for(const route of detours)assert.deepEqual(C.validate(route,zone),[]);
+ }
  if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);assert.deepEqual(C.validate(m.initialRoute,m),[])}
  if(i===3)assert.ok(m.battery<battery);
  battery=m.battery-C.length(m.route)*.016;
@@ -37,3 +49,4 @@ for(const name of ['东方明珠','金茂大厦','环球金融中心','震旦大
 assert.equal(S.landmarks.some(x=>x.id==='shanghai-tower'),false);
 assert.deepEqual(S.landmarks.find(x=>x.id==='aurora').point,[-228.5,748.9]);
 assert.deepEqual(S.landmarks.find(x=>x.id==='huaneng-united').point,[617.1,328]);
+
