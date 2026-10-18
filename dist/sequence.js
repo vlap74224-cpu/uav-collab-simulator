@@ -46,8 +46,9 @@ function make(index,origin,battery){
   m.reason='N1 按操作者手绘走向构成顺时针外围环线，将 92 个密集绘制点压缩为 11 个关键航段；只在两处建筑邻近区向外调整，四个打卡点均保留，航段互不交叉并通过完整三维网格净距检查。';
  }
  if(index===1){
-  m.route=[a,[650,230],[1000,-70],b];
-  m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n2-temporary-no-fly-v3-map-route';
+  // Seven key points keep the verified corridor readable on the minimap.
+  m.route=[a,[500,280],[650,230],[800,101.43],[1000,-70],[1050,13.33],b];
+  m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n2-temporary-no-fly-v4-clean-route';
   m.plannedNoFlyZone={x:800,y:100,r:55,margin:25,triggerProgress:.3,label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
   m.title='跨越东侧城区正常巡航，前往新 C 点';
   m.reason='从 B 点进入东侧城区，沿道路与建筑外缘依次绕过多栋建筑，充分利用扩展地图后到达东北建筑群入口；飞行期间持续检查临时空域通告。';
