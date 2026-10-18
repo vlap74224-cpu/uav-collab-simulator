@@ -18,4 +18,13 @@ assert.ok(c.validate(c.base, c.scenarios[0], 500, -1).length === 2);
 assert.equal(c.distanceToSegment([5, 5], [0, 0], [10, 0]), 5);
 assert.equal(c.length([[1, 1], [1, 1]]), 0);
 assert.ok(Number.isFinite(c.sample([[1, 1], [1, 1]], .5).x));
+const denseStraight=Array.from({length:101},(_,i)=>[i,i]);
+assert.deepEqual(c.simplifyRoute(denseStraight,8),[[0,0],[100,100]]);
+const denseTurn=[[0,0],...Array.from({length:49},(_,i)=>[i+1,0]),...Array.from({length:51},(_,i)=>[50,i])];
+const simplified=c.simplifyRoute(denseTurn,8);
+assert.ok(simplified.length<=8);
+assert.deepEqual(simplified[0],denseTurn[0]);
+assert.deepEqual(simplified.at(-1),denseTurn.at(-1));
+assert.ok(simplified.some(p=>p[0]===50&&p[1]===0),'key turn is preserved');
 console.log('PASS: five scenario routes, alternate routes, hazard and energy constraints, invalid inputs and trajectory sampling.');
+
