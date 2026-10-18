@@ -1,6 +1,6 @@
 (function(root){
 const C=typeof module!=='undefined'?require('./core.js'):root.UAV;
-const points=[{id:'home',name:'A · 起降区',point:[330,530]},{id:'lake',name:'B · 湖边巡检点',point:[350,330]},{id:'north',name:'C · 公园北侧入口',point:[480,230]},{id:'building',name:'D · 建筑巡检点',point:[560,400]},{id:'east',name:'E · 东侧终点',point:[450,550]}];
+const points=[{id:'home',name:'A · 起降区',point:[330,530]},{id:'lake',name:'B · 湖边巡检点',point:[350,330]},{id:'north',name:'C · 东北建筑群入口',point:[1150,180]},{id:'building',name:'D · 建筑巡检点',point:[560,400]},{id:'east',name:'E · 东侧终点',point:[450,550]}];
 const landmarks=[
  {id:'oriental-pearl',name:'东方明珠广播电视塔',shortName:'东方明珠',point:[-117,170],height:468,tier:1},
  {id:'aurora',name:'震旦国际大楼',shortName:'震旦大厦',point:[-228.5,748.9],height:128,tier:1},
@@ -19,6 +19,13 @@ const landmarks=[
  {id:'shanghai-information',name:'上海信息大楼',shortName:'上海信息大楼',point:[822.7,764],height:147,tier:2}
 ];
 const nodes=['N1','N2','N4','N5'];
+function n2Detours(origin,destination){
+ const a=origin.slice(),b=destination.slice();
+ return [
+  [a,[700,180],[700,130],[650,-20],[850,-70],[950,-20],[1000,-70],b],
+  [a,[700,180],[700,130],[650,-20],[750,-70],[850,-70],[950,-20],[1000,-70],b]
+ ];
+}
 function make(index,origin,battery){
  const a=origin.slice(),b=points[index+1].point.slice(),dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy),p=(t,k=0)=>[a[0]+dx*t-dy/len*k,a[1]+dy*t+dx/len*k];
  const m={id:nodes[index],name:['航迹跟随','航迹转向','动态冲突','资源可行性下降'][index],destination:points[index+1],route:[a,b],initialRoute:[a,b],alternative:[a,p(.5,25),b],battery,subtype:null,limits:'陆家嘴完整预载实体场景；树林、缓坡和事件为实验补建。净距与碰撞基于同一模型网格。安全色带以 Mavic 3E/3M 性能为参考并随速度更新，属于实验告警值。',error:'未建立校准的出错概率模型。',history:'暂无经过验证的历史执行表现。'};
@@ -38,14 +45,22 @@ function make(index,origin,battery){
   m.title='沿手绘外围环线巡游左侧建筑群与东方明珠';
   m.reason='N1 按操作者手绘走向构成顺时针外围环线，将 92 个密集绘制点压缩为 11 个关键航段；只在两处建筑邻近区向外调整，四个打卡点均保留，航段互不交叉并通过完整三维网格净距检查。';
  }
- if(index===1){m.title='在 B 点转向，继续前往 C';m.reason='当前位于 B 点；下一目标位于北侧，需调整航向后进入 B → C 航段。';}
+ if(index===1){
+  m.route=[a,[650,230],[1000,-70],b];
+  m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n2-temporary-no-fly-v2';
+  m.plannedNoFlyZone={x:800,y:100,r:55,margin:25,triggerProgress:.3,label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
+  m.title='跨越东侧城区正常巡航，前往新 C 点';
+  m.reason='从 B 点进入东侧城区，沿道路与建筑外缘依次绕过多栋建筑，充分利用扩展地图后到达东北建筑群入口；飞行期间持续检查临时空域通告。';
+ }
  if(index===2){m.title='沿 C → D 飞行，监测移动目标';m.subtype='dynamic';m.reason='交通目标以 9 m/s 穿越本航段；起飞后按双方位置和速度持续预测未来 30 秒的最近间隔。';m.limits+=' 采用匀速交通目标和三维间隔预测，40 m 为实验告警阈值，非真实适航标准。';}
  if(index===3){m.battery=Math.min(battery,Math.ceil(C.length([a,b])*.016+17));m.alternative=[a,points[0].point.slice()];m.title='电量余量下降，选择继续或返航';m.reason='实验注入电量下降。按固定每米耗电模型，直达 E 尚可保留 15% 余量；返航方案需单独检查，可能因距离过长而不可行。';m.limits+=' 能耗未计风速、载荷和电池老化。';}
  m.event=`${m.id} ${m.name} · ${'ABCDE'[index]} → ${'ABCDE'[index+1]}`;m.summary=m.title+'。请接受、修改或拒绝；确认后继续同一任务。';
  if(index===0)m.summary='路线包含 11 个互不交叉的航段和 4 个拍照打卡点；整体沿手绘外围环线，仅在碰撞位置局部绕障，完整模型最小净距约 22.0 m。请先复核路线。';
+ if(index===1){m.event='N2 航迹转向 · 跨城区正常巡航阶段';m.summary='先沿约 1.07 公里的跨城区航线绕过多栋建筑前往新 C 点；AI 在飞行中持续检查前方空域变化。';}
  return m;
 }
-const api={points,landmarks,nodes,make};if(typeof module!=='undefined')module.exports=api;else root.Sequence=api;
+const api={points,landmarks,nodes,make,n2Detours};if(typeof module!=='undefined')module.exports=api;else root.Sequence=api;
 })(typeof window!=='undefined'?window:globalThis);
+
 
 
