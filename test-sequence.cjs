@@ -26,7 +26,7 @@ for(let i=0;i<4;i++){
  }
  if(i===1){
   assert.equal(m.route.length,4);
-  assert.equal(m.routeRevision,'n2-temporary-no-fly-v2');
+  assert.equal(m.routeRevision,'n2-temporary-no-fly-v3-map-route');
   assert.ok(C.length(m.route)>1000);
   assert.equal(m.plannedNoFlyZone.label,'大型活动临时禁飞区');
   assert.deepEqual(m.initialRoute,m.route);
