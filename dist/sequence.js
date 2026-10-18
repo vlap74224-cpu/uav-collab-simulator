@@ -47,7 +47,7 @@ function make(index,origin,battery){
  }
  if(index===1){
   m.route=[a,[650,230],[1000,-70],b];
-  m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n2-temporary-no-fly-v2';
+  m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n2-temporary-no-fly-v3-map-route';
   m.plannedNoFlyZone={x:800,y:100,r:55,margin:25,triggerProgress:.3,label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
   m.title='跨越东侧城区正常巡航，前往新 C 点';
   m.reason='从 B 点进入东侧城区，沿道路与建筑外缘依次绕过多栋建筑，充分利用扩展地图后到达东北建筑群入口；飞行期间持续检查临时空域通告。';
