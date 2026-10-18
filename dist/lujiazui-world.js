@@ -2,8 +2,10 @@ import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {MeshBVH} from 'three-mesh-bvh';
 const host=document.getElementById('flightView'),notice=document.getElementById('viewStatus');
-window.worldReady=false;let state={x:330,y:530,heading:0,altitude:60},pitch=38,overview=false,cameraHeading=null,cameraPitch=null,lastFrame=0;
-window.flightView={update:s=>state=s,pitch:v=>pitch=+v};
+window.worldReady=false;let state={x:330,y:530,heading:0,altitude:60,status:'ready'},pitch=38,cameraYawOffset=0,overview=false,cameraHeading=null,cameraPitch=null,lastFrame=0,viewDrag=null;
+const clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),cameraPose=()=>({yawOffset:cameraYawOffset,pitch});
+function setCamera(next={},notify=false){if(Number.isFinite(Number(next.yawOffset)))cameraYawOffset=((Number(next.yawOffset)+540)%360)-180;if(Number.isFinite(Number(next.pitch)))pitch=clamp(Number(next.pitch),-35,85);if(notify)window.dispatchEvent(new CustomEvent('uav-camera-change',{detail:{...cameraPose(),final:!!next.final,source:next.source||'control'}}));return cameraPose()}
+window.flightView={update:s=>state=s,pitch:v=>setCamera({pitch:v}),setCamera,nudgeCamera:(yawDelta=0,pitchDelta=0)=>setCamera({yawOffset:cameraYawOffset+Number(yawDelta),pitch:pitch+Number(pitchDelta),source:'button'},true),getCamera:cameraPose};
 try{
  const scene=new T.Scene();scene.background=new T.Color('#b9cbd2');scene.fog=new T.Fog('#b9cbd2',650,1450);const surround=new T.Mesh(new T.PlaneGeometry(12000,12000),new T.MeshStandardMaterial({color:0x899488,roughness:1}));surround.rotation.x=-Math.PI/2;surround.position.y=-4;scene.add(surround);const camera=new T.PerspectiveCamera(68,1,.08,2200),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;host.append(renderer.domElement);scene.add(new T.HemisphereLight(0xe5f5ff,0x8a9271,2.5));const sun=new T.DirectionalLight(0xffffff,3);sun.position.set(-300,700,350);scene.add(sun);
  const vector=p=>new T.Vector3(p.x-450,p.z??p.altitude,p.y-330),radius=1.5,colliders=[];
@@ -39,10 +41,14 @@ try{
  const flightSpeed=()=>state.status==='manual'?Math.max(0,state.manualSpeed||0):Math.max(0,state.speed||0);
  window.UAVSafetyBoundary={horizontalLimits,verticalLimits,reference:'DJI Mavic 3E/3M'};
  const viewButton=document.createElement('button');viewButton.textContent='三维地图总览';viewButton.onclick=()=>{overview=!overview;viewButton.textContent=overview?'返回机载视角':'三维地图总览'};document.querySelector('.camera-strip').append(viewButton);
- window.flightView={update:s=>state=s,pitch:v=>pitch=+v,capture:()=>renderer.domElement.toDataURL('image/png')};
+ window.flightView={update:s=>state=s,pitch:v=>setCamera({pitch:v}),setCamera,nudgeCamera:(yawDelta=0,pitchDelta=0)=>setCamera({yawOffset:cameraYawOffset+Number(yawDelta),pitch:pitch+Number(pitchDelta),source:'button'},true),getCamera:cameraPose,capture:()=>renderer.domElement.toDataURL('image/png')};
  const resize=()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()};addEventListener('resize',resize);resize();
- function draw(now){requestAnimationFrame(draw);const pos=vector(state),targetHeading=state.heading*Math.PI/180,dt=lastFrame?Math.min(.1,(now-lastFrame)/1000):0;lastFrame=now;
-  cameraHeading=cameraHeading===null?targetHeading:FlightControls.smoothHeading(cameraHeading,targetHeading,dt,95,5);const heading=cameraHeading,target=state.lookAt?vector(state.lookAt):null,horizontal=target?Math.hypot(target.x-pos.x,target.z-pos.z):0,targetPitch=target?Math.atan2(pos.y-target.y,horizontal):pitch*Math.PI/180;
+ renderer.domElement.addEventListener('pointerdown',e=>{if(state.status!=='photo'||e.button!==0||overview)return;e.preventDefault();viewDrag={id:e.pointerId,x:e.clientX,y:e.clientY,start:cameraPose()};renderer.domElement.setPointerCapture(e.pointerId);renderer.domElement.classList.add('camera-dragging')});
+ renderer.domElement.addEventListener('pointermove',e=>{if(viewDrag?.id!==e.pointerId)return;e.preventDefault();setCamera({yawOffset:viewDrag.start.yawOffset-(e.clientX-viewDrag.x)*.22,pitch:viewDrag.start.pitch-(e.clientY-viewDrag.y)*.16,source:'drag'},true)});
+ function endViewDrag(e){if(viewDrag?.id!==e.pointerId)return;setCamera({...cameraPose(),final:true,source:'drag'},true);viewDrag=null;renderer.domElement.classList.remove('camera-dragging')}
+ renderer.domElement.addEventListener('pointerup',endViewDrag);renderer.domElement.addEventListener('pointercancel',endViewDrag);renderer.domElement.addEventListener('lostpointercapture',endViewDrag);
+ function draw(now){requestAnimationFrame(draw);const pos=vector(state),targetHeading=(state.heading+cameraYawOffset)*Math.PI/180,dt=lastFrame?Math.min(.1,(now-lastFrame)/1000):0;lastFrame=now;
+  cameraHeading=cameraHeading===null?targetHeading:FlightControls.smoothHeading(cameraHeading,targetHeading,dt,95,5);const heading=cameraHeading,targetPitch=pitch*Math.PI/180;
   cameraPitch=cameraPitch===null?targetPitch:FlightControls.smoothHeading(cameraPitch,targetPitch,dt,60,4);
   if(overview){camera.position.set(680,670,820);camera.lookAt(0,20,0)}else{camera.position.copy(pos);const p=cameraPitch;camera.lookAt(pos.clone().add(new T.Vector3(Math.sin(heading)*Math.cos(p),-Math.sin(p),-Math.cos(heading)*Math.cos(p))))}
   camera.updateMatrixWorld();
@@ -63,3 +69,4 @@ try{
  }
 host.dataset.worldSource='Lujiazui fixed mesh';host.dataset.colliderCount=colliders.length;window.worldReady=true;notice.textContent='陆家嘴实体场景已就绪 · 树林与缓坡为实验补建';window.dispatchEvent(new Event('world-ready'));requestAnimationFrame(draw);
 }catch(e){notice.textContent='模型加载失败：'+e.message;host.dataset.worldError=e.message;console.error(e)}
+
