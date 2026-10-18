@@ -25,8 +25,9 @@ for(let i=0;i<4;i++){
   for(let a=0;a<m.route.length-1;a++)for(let b=a+2;b<m.route.length-1;b++)assert.equal(crosses(m.route[a],m.route[a+1],m.route[b],m.route[b+1]),false,`N1 route segments ${a} and ${b} cross`);
  }
  if(i===1){
-  assert.equal(m.route.length,4);
-  assert.equal(m.routeRevision,'n2-temporary-no-fly-v3-map-route');
+  assert.equal(m.route.length,7);
+  assert.equal(m.routeRevision,'n2-temporary-no-fly-v4-clean-route');
+  assert.ok(m.route.slice(1).every((point,j)=>point[0]>=m.route[j][0]),'N2 route should keep progressing east without backtracking');
   assert.ok(C.length(m.route)>1000);
   assert.equal(m.plannedNoFlyZone.label,'大型活动临时禁飞区');
   assert.deepEqual(m.initialRoute,m.route);
