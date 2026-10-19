@@ -16,6 +16,8 @@ assert.deepEqual(c.workArea, {minX:-345,maxX:1245,minY:-295,maxY:955});
 assert.ok(c.validate([[-346,0],[0,0]], c.scenarios[0]).some(x=>x.includes('作业区')));
 assert.ok(c.validate(c.base, c.scenarios[0], 500, -1).length === 2);
 assert.equal(c.distanceToSegment([5, 5], [0, 0], [10, 0]), 5);
+assert.deepEqual(c.nearestPointOnRoute([[0,0],[10,0],[10,10]],[6,2]),{segmentIndex:0,t:.6,point:[6,0],distance:2});
+assert.deepEqual(c.nearestPointOnRoute([[0,0],[10,0],[10,10]],[13,7]),{segmentIndex:1,t:.7,point:[10,7],distance:3});
 assert.equal(c.length([[1, 1], [1, 1]]), 0);
 assert.ok(Number.isFinite(c.sample([[1, 1], [1, 1]], .5).x));
 const denseStraight=Array.from({length:101},(_,i)=>[i,i]);
