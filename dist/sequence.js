@@ -21,14 +21,18 @@ const landmarks=[
 const nodes=['N1','N2','N4','N5'];
 function n2EventWindow(random=Math.random){
  const sample=()=>{const value=Number(random());return Math.max(0,Math.min(1,Number.isFinite(value)?value:0))};
- return{revealProgress:Number((.22+sample()*.05).toFixed(3)),triggerProgress:Number((.34+sample()*.04).toFixed(3))};
+ return{revealProgress:Number((.22+sample()*.05).toFixed(3))};
 }
-function n2Detours(origin,destination){
+function n2DynamicNoFlyZone(route,revealProgress,random=Math.random){
+ const total=C.length(route),reveal=Math.max(0,Math.min(.9,Number(revealProgress)||0)),value=Number(random()),sample=Math.max(0,Math.min(1,Number.isFinite(value)?value:0)),r=55,margin=25,remaining=total*(1-reveal),maxAhead=Math.max(r+margin+45,Math.min(260,remaining-40)),minAhead=Math.min(180,maxAhead),ahead=minAhead+(maxAhead-minAhead)*sample,routeProgress=Math.min(.96,reveal+ahead/total),stopClearance=r+margin+30,triggerProgress=Math.max(reveal+.03,routeProgress-stopClearance/total),point=C.sample(route,routeProgress);
+ return{x:point.x,y:point.y,r,margin,routeProgress:Number(routeProgress.toFixed(4)),triggerProgress:Number(triggerProgress.toFixed(4)),label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
+}
+function n2Detours(origin,destination,zone,interruptedRoute){
  const a=origin.slice(),b=destination.slice();
- return [
-  [a,[700,180],[700,130],[650,-20],[850,-70],[950,-20],[1000,-70],b],
-  [a,[700,180],[700,130],[650,-20],[750,-70],[850,-70],[950,-20],[1000,-70],b]
- ];
+ if(!zone||!Array.isArray(interruptedRoute)||interruptedRoute.length<2)return[[a,b],[a,b]];
+ const total=C.length(interruptedRoute),clearance=zone.r+zone.margin,longitudinal=clearance*.72,lateral=clearance+38,rejoinProgress=Math.min(1,(zone.routeProgress||0)+(clearance+55)/total),rejoinSample=C.sample(interruptedRoute,rejoinProgress),rejoin=[rejoinSample.x,rejoinSample.y],dx=rejoin[0]-a[0],dy=rejoin[1]-a[1],length=Math.max(1,Math.hypot(dx,dy)),ux=dx/length,uy=dy/length,nx=-uy,ny=ux,remainder=interruptedRoute.slice(rejoinSample.next).map(p=>p.slice());
+ const build=sign=>[a,[zone.x-ux*longitudinal+nx*lateral*sign,zone.y-uy*longitudinal+ny*lateral*sign],[zone.x+ux*longitudinal+nx*lateral*sign,zone.y+uy*longitudinal+ny*lateral*sign],rejoin,...remainder,b].filter((p,i,list)=>!i||Math.hypot(p[0]-list[i-1][0],p[1]-list[i-1][1])>.1);
+ return[build(1),build(-1)];
 }
 function make(index,origin,battery){
  const a=origin.slice(),b=points[index+1].point.slice(),dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy),p=(t,k=0)=>[a[0]+dx*t-dy/len*k,a[1]+dy*t+dx/len*k];
@@ -52,8 +56,8 @@ function make(index,origin,battery){
  if(index===1){
   // Seven key points keep the verified corridor readable on the minimap.
   m.route=[a,[500,280],[650,230],[800,101.43],[1000,-70],[1050,13.33],b];
-  m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n2-temporary-no-fly-v6-early-warning';
-  m.plannedNoFlyZone={x:800,y:100,r:55,margin:25,...n2EventWindow(),label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
+  m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n2-temporary-no-fly-v7-current-route';
+  m.plannedNoFlyZone={...n2EventWindow(),label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
   m.title='跨越东侧城区正常巡航，前往新 C 点';
   m.reason='从 B 点进入东侧城区，沿道路与建筑外缘依次绕过多栋建筑，充分利用扩展地图后到达东北建筑群入口；飞行期间持续检查临时空域通告。';
  }
@@ -64,7 +68,7 @@ function make(index,origin,battery){
  if(index===1){m.event='N2 航迹转向 · 跨城区正常巡航阶段';m.summary='先沿约 1.07 公里的跨城区航线绕过多栋建筑前往新 C 点；AI 在飞行中持续检查前方空域变化。';}
  return m;
 }
-const api={points,landmarks,nodes,make,n2Detours,n2EventWindow};if(typeof module!=='undefined')module.exports=api;else root.Sequence=api;
+const api={points,landmarks,nodes,make,n2Detours,n2EventWindow,n2DynamicNoFlyZone};if(typeof module!=='undefined')module.exports=api;else root.Sequence=api;
 })(typeof window!=='undefined'?window:globalThis);
 
 
