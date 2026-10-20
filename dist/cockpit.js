@@ -21,7 +21,8 @@ function planDestination(dest){
  $('destinationPanel').hidden=true;$('toggleMission').setAttribute('aria-expanded','false');
  log('present','呈现 AI 建议',mission.name+' / '+dest.name,before);render();window.focusMissionRoute?.([...state.trail,...mission.route,...(mission.hazard&&(mission.id!=='N2'||state.noFlyVisible||state.noFlyDetected)?[[mission.hazard.x,mission.hazard.y]]:[])]);
 }
-$('destinationForm').onsubmit=e=>{e.preventDefault();if(mission){toast('请先点击新任务，再更换飞行范围');return}const mode=$('routeMode').value,index=mode==='all'?0:Number(mode),a=Sequence.points[index].point;state.route=[a,[a[0],a[1]-1]];state.trail=[a.slice()];state.sequence={index,single:mode!=='all'};log('sequence_start','加载航线',mode==='all'?'全程 A → E':'单段 '+ 'ABCDE'[index]+' → '+'ABCDE'[index+1]);presentStage(index)};
+function closeMissionPicker(){$('destinationPanel').hidden=true;$('toggleMission').setAttribute('aria-expanded','false')}
+$('destinationForm').onsubmit=e=>{e.preventDefault();if(mission){toast('请先点击新任务，再更换飞行范围');return}closeMissionPicker();const mode=$('routeMode').value,index=mode==='all'?0:Number(mode),a=Sequence.points[index].point;state.route=[a,[a[0],a[1]-1]];state.trail=[a.slice()];state.sequence={index,single:mode!=='all'};log('sequence_start','加载航线',mode==='all'?'全程 A → E':'单段 '+ 'ABCDE'[index]+' → '+'ABCDE'[index+1]);presentStage(index)};
 $('simRate').onchange=()=>{state.simRate=Number($('simRate').value);log('simulation_rate','调整仿真倍速',state.simRate+'×，物理速度不变')};
 function el(tag,text,attrs={}){const e=document.createElement(tag);e.textContent=text;Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));return e}
 function renderCards(){const cards=$('satCards');cards.replaceChildren();if(!mission)return;const route=draft?.route||state.route,alt=draft?.altitude||state.altitude,speed=draft?.speed||state.speed,est=C.estimate(route,mission.battery,speed);const target=state.goalDeferred||draft?.goalDeferred?'起降区（原目标暂缓）':mission.destination.name;
