@@ -26,10 +26,12 @@ for(let i=0;i<4;i++){
  }
  if(i===1){
   assert.equal(m.route.length,7);
-  assert.equal(m.routeRevision,'n2-temporary-no-fly-v4-clean-route');
+  assert.equal(m.routeRevision,'n2-temporary-no-fly-v5-random-event');
   assert.ok(m.route.slice(1).every((point,j)=>point[0]>=m.route[j][0]),'N2 route should keep progressing east without backtracking');
   assert.ok(C.length(m.route)>1000);
   assert.equal(m.plannedNoFlyZone.label,'大型活动临时禁飞区');
+  assert.ok(m.plannedNoFlyZone.triggerProgress>=.27&&m.plannedNoFlyZone.triggerProgress<=.38);
+  assert.equal(m.hazard,undefined,'temporary no-fly zone must stay hidden before it is detected');
   assert.deepEqual(m.initialRoute,m.route);
   const zone={...m,hazard:m.plannedNoFlyZone};
   assert.ok(C.validate(m.initialRoute,zone).length>0,'original N2 route should enter the newly announced no-fly zone');
@@ -44,6 +46,9 @@ for(let i=0;i<4;i++){
  assert.deepEqual(resumed.route[0],[halfway.x,halfway.y]);
  assert.ok(resumed.battery<=battery);
 }
+assert.equal(S.n2TriggerProgress(()=>0),.27);
+assert.equal(S.n2TriggerProgress(()=>.5),.325);
+assert.equal(S.n2TriggerProgress(()=>1),.38);
 assert.ok(battery>=15);console.log('Four sequential events, endpoints, collision clearance, resource drop and resumption passed.');
 assert.equal(S.landmarks.length,15);
 for(const name of ['东方明珠','金茂大厦','环球金融中心','震旦大厦','香格里拉酒店','招商局大厦','时代金融'])assert.ok(S.landmarks.some(x=>x.shortName===name));
