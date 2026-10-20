@@ -19,9 +19,9 @@ const landmarks=[
  {id:'shanghai-information',name:'上海信息大楼',shortName:'上海信息大楼',point:[822.7,764],height:147,tier:2}
 ];
 const nodes=['N1','N2','N4','N5'];
-function n2TriggerProgress(random=Math.random){
- const value=Number(random());
- return Number((.27+Math.max(0,Math.min(1,Number.isFinite(value)?value:0))*.11).toFixed(3));
+function n2EventWindow(random=Math.random){
+ const sample=()=>{const value=Number(random());return Math.max(0,Math.min(1,Number.isFinite(value)?value:0))};
+ return{revealProgress:Number((.22+sample()*.05).toFixed(3)),triggerProgress:Number((.34+sample()*.04).toFixed(3))};
 }
 function n2Detours(origin,destination){
  const a=origin.slice(),b=destination.slice();
@@ -52,8 +52,8 @@ function make(index,origin,battery){
  if(index===1){
   // Seven key points keep the verified corridor readable on the minimap.
   m.route=[a,[500,280],[650,230],[800,101.43],[1000,-70],[1050,13.33],b];
-  m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n2-temporary-no-fly-v5-random-event';
-  m.plannedNoFlyZone={x:800,y:100,r:55,margin:25,triggerProgress:n2TriggerProgress(),label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
+  m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n2-temporary-no-fly-v6-early-warning';
+  m.plannedNoFlyZone={x:800,y:100,r:55,margin:25,...n2EventWindow(),label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
   m.title='跨越东侧城区正常巡航，前往新 C 点';
   m.reason='从 B 点进入东侧城区，沿道路与建筑外缘依次绕过多栋建筑，充分利用扩展地图后到达东北建筑群入口；飞行期间持续检查临时空域通告。';
  }
@@ -64,7 +64,7 @@ function make(index,origin,battery){
  if(index===1){m.event='N2 航迹转向 · 跨城区正常巡航阶段';m.summary='先沿约 1.07 公里的跨城区航线绕过多栋建筑前往新 C 点；AI 在飞行中持续检查前方空域变化。';}
  return m;
 }
-const api={points,landmarks,nodes,make,n2Detours,n2TriggerProgress};if(typeof module!=='undefined')module.exports=api;else root.Sequence=api;
+const api={points,landmarks,nodes,make,n2Detours,n2EventWindow};if(typeof module!=='undefined')module.exports=api;else root.Sequence=api;
 })(typeof window!=='undefined'?window:globalThis);
 
 
