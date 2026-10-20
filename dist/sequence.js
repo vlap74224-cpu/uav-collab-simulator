@@ -24,15 +24,16 @@ function n2EventWindow(random=Math.random){
  return{revealProgress:Number((.22+sample()*.05).toFixed(3))};
 }
 function n2DynamicNoFlyZone(route,revealProgress,random=Math.random){
- const total=C.length(route),reveal=Math.max(0,Math.min(.9,Number(revealProgress)||0)),value=Number(random()),sample=Math.max(0,Math.min(1,Number.isFinite(value)?value:0)),r=55,margin=25,remaining=total*(1-reveal),maxAhead=Math.max(r+margin+45,Math.min(260,remaining-40)),minAhead=Math.min(180,maxAhead),ahead=minAhead+(maxAhead-minAhead)*sample,routeProgress=Math.min(.96,reveal+ahead/total),stopClearance=r+margin+30,triggerProgress=Math.max(reveal+.03,routeProgress-stopClearance/total),point=C.sample(route,routeProgress);
+ const total=C.length(route),reveal=Math.max(0,Math.min(.9,Number(revealProgress)||0)),value=Number(random()),sample=Math.max(0,Math.min(1,Number.isFinite(value)?value:0)),r=55,margin=25,remaining=total*(1-reveal),maxAhead=Math.max(r+margin+55,Math.min(500,remaining-35)),minAhead=Math.min(380,maxAhead),ahead=minAhead+(maxAhead-minAhead)*sample,routeProgress=Math.min(.96,reveal+ahead/total),stopClearance=r+margin+45,triggerProgress=Math.max(reveal+.05,routeProgress-stopClearance/total),point=C.sample(route,routeProgress);
  return{x:point.x,y:point.y,r,margin,routeProgress:Number(routeProgress.toFixed(4)),triggerProgress:Number(triggerProgress.toFixed(4)),label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
 }
 function n2Detours(origin,destination,zone,interruptedRoute){
  const a=origin.slice(),b=destination.slice();
  if(!zone||!Array.isArray(interruptedRoute)||interruptedRoute.length<2)return[[a,b],[a,b]];
- const total=C.length(interruptedRoute),clearance=zone.r+zone.margin,longitudinal=clearance*.72,lateral=clearance+38,rejoinProgress=Math.min(1,(zone.routeProgress||0)+(clearance+55)/total),rejoinSample=C.sample(interruptedRoute,rejoinProgress),rejoin=[rejoinSample.x,rejoinSample.y],dx=rejoin[0]-a[0],dy=rejoin[1]-a[1],length=Math.max(1,Math.hypot(dx,dy)),ux=dx/length,uy=dy/length,nx=-uy,ny=ux,remainder=interruptedRoute.slice(rejoinSample.next).map(p=>p.slice());
- const build=sign=>[a,[zone.x-ux*longitudinal+nx*lateral*sign,zone.y-uy*longitudinal+ny*lateral*sign],[zone.x+ux*longitudinal+nx*lateral*sign,zone.y+uy*longitudinal+ny*lateral*sign],rejoin,...remainder,b].filter((p,i,list)=>!i||Math.hypot(p[0]-list[i-1][0],p[1]-list[i-1][1])>.1);
- return[build(1),build(-1)];
+ const total=C.length(interruptedRoute),clearance=zone.r+zone.margin,rejoinProgress=Math.min(1,(zone.routeProgress||0)+(clearance+80)/total),rejoinSample=C.sample(interruptedRoute,rejoinProgress),rejoin=[rejoinSample.x,rejoinSample.y],dx=rejoin[0]-a[0],dy=rejoin[1]-a[1],length=Math.max(1,Math.hypot(dx,dy)),ux=dx/length,uy=dy/length,nx=-uy,ny=ux,remainder=interruptedRoute.slice(rejoinSample.next).map(p=>p.slice());
+ const build=(sign,longitudinal,lateral)=>[a,[zone.x-ux*longitudinal+nx*lateral*sign,zone.y-uy*longitudinal+ny*lateral*sign],[zone.x+ux*longitudinal+nx*lateral*sign,zone.y+uy*longitudinal+ny*lateral*sign],rejoin,...remainder,b].filter((p,i,list)=>!i||Math.hypot(p[0]-list[i-1][0],p[1]-list[i-1][1])>.1),routes=[];
+ for(const lateral of[clearance+38,clearance+85,clearance+140,clearance+210,clearance+300,clearance+400,clearance+500])for(const longitudinal of[clearance*.72,clearance*1.1,clearance*1.5])for(const sign of[1,-1])routes.push(build(sign,longitudinal,lateral));
+ return routes;
 }
 function make(index,origin,battery){
  const a=origin.slice(),b=points[index+1].point.slice(),dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy),p=(t,k=0)=>[a[0]+dx*t-dy/len*k,a[1]+dy*t+dx/len*k];

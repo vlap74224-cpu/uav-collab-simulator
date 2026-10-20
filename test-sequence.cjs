@@ -41,8 +41,10 @@ for(let i=0;i<4;i++){
   assert.ok(Math.hypot(center.x-zone.x,center.y-zone.y)<.1);
   assert.ok(Math.hypot(reveal.x-zone.x,reveal.y-zone.y)>Math.hypot(trigger.x-zone.x,trigger.y-zone.y));
   assert.ok(Math.hypot(trigger.x-zone.x,trigger.y-zone.y)>zone.r+zone.margin);
-  assert.equal(detours.length,2);
-  for(const route of detours){assert.deepEqual(route[0],[trigger.x,trigger.y]);assert.deepEqual(route.at(-1),m.destination.point);assert.deepEqual(C.validate(route,scene),[])}
+  assert.equal(detours.length,42);
+  const validDetours=detours.filter(route=>C.validate(route,scene).length===0);assert.ok(validDetours.length>=2);
+  assert.ok((zone.triggerProgress-m.plannedNoFlyZone.revealProgress)*C.length(editedRoute)/12>=21);
+  for(const route of validDetours){assert.deepEqual(route[0],[trigger.x,trigger.y]);assert.deepEqual(route.at(-1),m.destination.point)}
  }
  if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);assert.deepEqual(C.validate(m.initialRoute,m),[])}
  if(i===3)assert.ok(m.battery<battery);
