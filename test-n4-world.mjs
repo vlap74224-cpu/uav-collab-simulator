@@ -12,6 +12,7 @@ function collision(a,b){const pa=new T.Vector3(a.x-450,a.z,a.y-330),pb=new T.Vec
 const m=Sequence.make(2,Sequence.points[2].point,82);
 function scan(route){return route.slice(1).map((b,i)=>{const a=route[i],n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/2);let min=Infinity,point;for(let j=0;j<=n;j++){const t=j/n,p={x:a[0]+t*(b[0]-a[0]),y:a[1]+t*(b[1]-a[1]),z:60},d=clearance(p).distance;if(d<min){min=d;point=p}}return{segment:i+1,min,point,hit:collision({x:a[0],y:a[1],z:60},{x:b[0],y:b[1],z:60})}})}
 
+assert(m.route.slice(4).every(p=>p[0]<=1040),'N4 main route should stay inside the city rather than following the eastern map edge');
 const segments=scan(m.route);for(const segment of segments){assert(segment.min>25,'N4 must stay green with margin: '+JSON.stringify(segment));assert.equal(segment.hit,null,'N4 segment must not collide')}
 assert.deepEqual(C.validate(m.route,m,60,12),[]);
 const Traffic=require('./dist/traffic.js'),target=Traffic.create(m.route[0],m.destination.point,12,m.route),cross=C.sample(m.route,.5),traffic=Traffic.position(target,target.crossTime);assert(Math.hypot(cross.x-traffic.x,cross.y-traffic.y)<.01,'N4 dynamic crossing must follow revised route');
