@@ -8,7 +8,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),focalToFov=mm=>2*Math.ata
 function setCamera(next={},notify=false){if(Number.isFinite(Number(next.yawOffset)))cameraYawOffset=((Number(next.yawOffset)+540)%360)-180;if(Number.isFinite(Number(next.pitch)))pitch=clamp(Number(next.pitch),-75,85);if(Number.isFinite(Number(next.focalLength)))focalLength=clamp(Number(next.focalLength),8,55);applyFocal();if(notify)window.dispatchEvent(new CustomEvent('uav-camera-change',{detail:{...cameraPose(),final:!!next.final,source:next.source||'control'}}));return cameraPose()}
 window.flightView={update:s=>state=s,pitch:v=>setCamera({pitch:v}),setCamera,nudgeCamera:(yawDelta=0,pitchDelta=0)=>setCamera({yawOffset:cameraYawOffset+Number(yawDelta),pitch:pitch+Number(pitchDelta),source:'button'},true),getCamera:cameraPose};
 try{
- const scene=new T.Scene();scene.background=new T.Color('#b9cbd2');scene.fog=new T.Fog('#b9cbd2',650,1450);const surround=new T.Mesh(new T.PlaneGeometry(12000,12000),new T.MeshStandardMaterial({color:0x899488,roughness:1}));surround.rotation.x=-Math.PI/2;surround.position.y=-4;scene.add(surround);const camera=new T.PerspectiveCamera(68,1,.08,2200),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});cameraRef=camera;applyFocal();renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;host.append(renderer.domElement);scene.add(new T.HemisphereLight(0xe5f5ff,0x8a9271,1.95));const sun=new T.DirectionalLight(0xffffff,3);sun.position.set(-300,700,350);scene.add(sun);
+ const scene=new T.Scene();scene.background=new T.Color('#b9cbd2');scene.fog=new T.Fog('#b9cbd2',650,1450);const surround=new T.Mesh(new T.PlaneGeometry(12000,12000),new T.MeshStandardMaterial({color:0x899488,roughness:1}));surround.rotation.x=-Math.PI/2;surround.position.y=-4;scene.add(surround);const camera=new T.PerspectiveCamera(68,1,.8,2200),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});cameraRef=camera;applyFocal();renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;host.append(renderer.domElement);scene.add(new T.HemisphereLight(0xe5f5ff,0x8a9271,1.95));const sun=new T.DirectionalLight(0xffffff,3);sun.position.set(-300,700,350);scene.add(sun);
  // Neutral source materials are very pale under the daylight fill. Keep the
  // authored landmark colours, and give untextured concrete a darker mineral palette.
  const stylePerimeterMesh=createPerimeterFacadeStyler(renderer);
@@ -19,6 +19,10 @@ try{
   const box=new T.Box3().setFromObject(mesh),building=box.max.y>8&&!/tree|slope/i.test(mesh.name);
   const style=original=>{
    original.metalness=.05;original.roughness=.8;
+   // Imported glazing and trim can be almost coplanar. Keep glass behind the
+   // authored window frames without moving the mesh or its collision surface.
+   const glass=building&&original.color&&original.color.b>original.color.r+.025&&original.color.b>original.color.g;
+   if(glass){original.polygonOffset=true;original.polygonOffsetFactor=1;original.polygonOffsetUnits=1;}
    if(!building||!original.color||original.map)return original;
    const c=original.color,bright=Math.max(c.r,c.g,c.b),dim=Math.min(c.r,c.g,c.b);
    if(bright-dim>.055||bright<.22)return original;
