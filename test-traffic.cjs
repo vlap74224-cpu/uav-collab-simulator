@@ -7,3 +7,5 @@ const p=T.position(t,2),q=T.position(t);assert.ok(Math.abs(Math.hypot(p.x-q.x,p.
 t.time=30;assert.equal(T.predict([a,b],0,12,60,t).conflict,false);
 for(let i=0;i<4;i++){const m=S.make(i,S.points[i].point,82);assert.deepEqual(m.route[0],S.points[i].point);assert.deepEqual(m.route.at(-1),S.points[i+1].point);assert.deepEqual(C.validate(m.route,m,60,12),[])}
 console.log('PASS crossing CPA, altitude separation, physical target speed, clearance after passage, all four segment endpoints.');
+
+const n4=S.make(2,S.points[2].point,82),n4Traffic=T.create(n4.route[0],n4.route.at(-1),12,n4.route);n4Traffic.time=Math.max(0,n4Traffic.crossTime-20);const n4Risk=T.predict(n4.route,n4Traffic.time*12/C.length(n4.route),12,60,n4Traffic);assert.ok(n4Risk.conflict,'N4 traffic must cross the user-drawn route');
