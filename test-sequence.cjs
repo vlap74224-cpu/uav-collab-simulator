@@ -46,7 +46,7 @@ for(let i=0;i<4;i++){
   assert.ok((zone.triggerProgress-m.plannedNoFlyZone.revealProgress)*C.length(editedRoute)/12>=21);
   for(const route of validDetours){assert.deepEqual(route[0],[trigger.x,trigger.y]);assert.deepEqual(route.at(-1),m.destination.point)}
  }
- if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);assert.equal(m.routeRevision,'n4-user-drawn-east-v1');assert.deepEqual(S.points[3].point,[854,830]);assert.deepEqual(m.route,[[1150,180],[1038,290],[1136,656],[962,746],[854,830]]);assert.deepEqual(C.validate(m.initialRoute,m),[])}
+if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);assert.equal(m.routeRevision,'n4-user-drawn-east-v2');assert.deepEqual(S.points[3].point,[854,830]);assert.deepEqual(m.route,[[1150,180],[1038,290],[1136,656],[962,746],[854,830]]);assert.deepEqual(C.validate(m.initialRoute,m),[])}
  if(i===3)assert.ok(m.battery<battery);
  battery=m.battery-C.length(m.route)*.016;
  const halfway=C.sample(m.route,.3),resumed=S.make(i,[halfway.x,halfway.y],battery);

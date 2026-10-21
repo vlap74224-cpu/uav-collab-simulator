@@ -62,7 +62,7 @@ function make(index,origin,battery){
   m.title='跨越东侧城区正常巡航，前往新 C 点';
   m.reason='从 B 点进入东侧城区，沿道路与建筑外缘依次绕过多栋建筑，充分利用扩展地图后到达东北建筑群入口；飞行期间持续检查临时空域通告。';
  }
- if(index===2){m.route=[a,[1038,290],[1136,656],[962,746],b];m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n4-user-drawn-east-v1';m.title='沿手绘东侧路线从 C 飞往新 D 点';m.subtype='dynamic';m.reason='N4 按操作者绘制的 4 个航点沿东侧建筑群飞行，并将原航点 4 设为新的 D 点；交通目标以 9 m/s 穿越本航段，起飞后按双方位置和速度持续预测未来 30 秒的最近间隔。';m.limits+=' 采用匀速交通目标和三维间隔预测，40 m 为实验告警阈值，非真实适航标准。';}
+ if(index===2){m.route=[a,[1038,290],[1136,656],[962,746],b];m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n4-user-drawn-east-v2';m.title='沿手绘东侧路线从 C 飞往新 D 点';m.subtype='dynamic';m.reason='N4 按操作者绘制的 4 个航点沿东侧建筑群飞行，并将原航点 4 设为新的 D 点；交通目标以 9 m/s 穿越本航段，起飞后按双方位置和速度持续预测未来 30 秒的最近间隔。';m.limits+=' 采用匀速交通目标和三维间隔预测，40 m 为实验告警阈值，非真实适航标准。';}
  if(index===3){m.battery=Math.min(battery,Math.ceil(C.length([a,b])*.016+17));m.alternative=[a,points[0].point.slice()];m.title='电量余量下降，选择继续或返航';m.reason='实验注入电量下降。按固定每米耗电模型，直达 E 尚可保留 15% 余量；返航方案需单独检查，可能因距离过长而不可行。';m.limits+=' 能耗未计风速、载荷和电池老化。';}
  m.event=`${m.id} ${m.name} · ${'ABCDE'[index]} → ${'ABCDE'[index+1]}`;m.summary=m.title+'。请接受、修改或拒绝；确认后继续同一任务。';
  if(index===0)m.summary='路线包含 11 个互不交叉的航段和 4 个拍照打卡点；整体沿手绘外围环线，仅在碰撞位置局部绕障，完整模型最小净距约 22.0 m。请先复核路线。';
