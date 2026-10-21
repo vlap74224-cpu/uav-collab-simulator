@@ -7,7 +7,28 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),focalToFov=mm=>2*Math.ata
 function setCamera(next={},notify=false){if(Number.isFinite(Number(next.yawOffset)))cameraYawOffset=((Number(next.yawOffset)+540)%360)-180;if(Number.isFinite(Number(next.pitch)))pitch=clamp(Number(next.pitch),-75,85);if(Number.isFinite(Number(next.focalLength)))focalLength=clamp(Number(next.focalLength),8,55);applyFocal();if(notify)window.dispatchEvent(new CustomEvent('uav-camera-change',{detail:{...cameraPose(),final:!!next.final,source:next.source||'control'}}));return cameraPose()}
 window.flightView={update:s=>state=s,pitch:v=>setCamera({pitch:v}),setCamera,nudgeCamera:(yawDelta=0,pitchDelta=0)=>setCamera({yawOffset:cameraYawOffset+Number(yawDelta),pitch:pitch+Number(pitchDelta),source:'button'},true),getCamera:cameraPose};
 try{
- const scene=new T.Scene();scene.background=new T.Color('#b9cbd2');scene.fog=new T.Fog('#b9cbd2',650,1450);const surround=new T.Mesh(new T.PlaneGeometry(12000,12000),new T.MeshStandardMaterial({color:0x899488,roughness:1}));surround.rotation.x=-Math.PI/2;surround.position.y=-4;scene.add(surround);const camera=new T.PerspectiveCamera(68,1,.08,2200),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});cameraRef=camera;applyFocal();renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;host.append(renderer.domElement);scene.add(new T.HemisphereLight(0xe5f5ff,0x8a9271,2.5));const sun=new T.DirectionalLight(0xffffff,3);sun.position.set(-300,700,350);scene.add(sun);
+ const scene=new T.Scene();scene.background=new T.Color('#b9cbd2');scene.fog=new T.Fog('#b9cbd2',650,1450);const surround=new T.Mesh(new T.PlaneGeometry(12000,12000),new T.MeshStandardMaterial({color:0x899488,roughness:1}));surround.rotation.x=-Math.PI/2;surround.position.y=-4;scene.add(surround);const camera=new T.PerspectiveCamera(68,1,.08,2200),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});cameraRef=camera;applyFocal();renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;host.append(renderer.domElement);scene.add(new T.HemisphereLight(0xe5f5ff,0x8a9271,1.95));const sun=new T.DirectionalLight(0xffffff,3);sun.position.set(-300,700,350);scene.add(sun);
+ // Neutral source materials are very pale under the daylight fill. Keep the
+ // authored landmark colours, and give untextured concrete a darker mineral palette.
+ const concreteMaterials=new WeakMap(),concreteTints=[0x9aabb6,0xa8aaa3,0x8f9da5,0xa49c91,0x879aa8];
+ function styleModel(root){root.updateMatrixWorld(true);root.traverse(mesh=>{
+  if(!mesh.isMesh)return;
+  const box=new T.Box3().setFromObject(mesh),building=box.max.y>8&&!/tree|slope/i.test(mesh.name);
+  const style=original=>{
+   original.metalness=.05;original.roughness=.8;
+   if(!building||!original.color||original.map)return original;
+   const c=original.color,bright=Math.max(c.r,c.g,c.b),dim=Math.min(c.r,c.g,c.b);
+   if(bright-dim>.055||bright<.22)return original;
+   if(concreteMaterials.has(original))return concreteMaterials.get(original);
+   let hash=0;for(const char of original.name)hash=(hash*31+char.charCodeAt(0))>>>0;
+   const material=original.clone(),tint=new T.Color(concreteTints[hash%concreteTints.length]);
+   // Tint in linear space, retaining the original relative lightness.
+   material.color.copy(tint).multiplyScalar(.72+Math.min(.9,bright)*.35).lerp(c,.4);
+   material.roughness=.94;material.metalness=.02;
+   concreteMaterials.set(original,material);return material;
+  };
+  mesh.material=Array.isArray(mesh.material)?mesh.material.map(style):style(mesh.material);
+ });}
  const vector=p=>new T.Vector3(p.x-450,p.z??p.altitude,p.y-330),radius=1.5,colliders=[];
  const resize=()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()};addEventListener('resize',resize);resize();
  // Start drawing immediately so the scene does not look blank while the 34 model parts load.
@@ -17,9 +38,9 @@ try{
  // Keep the full mesh, but limit concurrent downloads/decodes so mobile browsers
  // do not receive all 218 MB at once and exhaust memory before the UI appears.
  const constrainedDevice=matchMedia('(max-width: 900px)').matches||(Number(navigator.deviceMemory)||8)<=4,loadConcurrency=Math.min(files.length,constrainedDevice?4:12);
- await Promise.all(Array.from({length:loadConcurrency},async()=>{while(nextFile<files.length){const index=nextFile++,file=files[index],model=await loader.loadAsync(`assets/${file}?v=full1`);models[index]=model;scene.add(model.scene);loadedFiles++;notice.textContent=`正在加载完整陆家嘴模型 ${loadedFiles}/${files.length} · 已显示 ${loadedFiles} 个分片`;await new Promise(resolve=>setTimeout(resolve,0));}}));
+ await Promise.all(Array.from({length:loadConcurrency},async()=>{while(nextFile<files.length){const index=nextFile++,file=files[index],model=await loader.loadAsync(`assets/${file}?v=full1`);models[index]=model;styleModel(model.scene);scene.add(model.scene);loadedFiles++;notice.textContent=`正在加载完整陆家嘴模型 ${loadedFiles}/${files.length} · 已显示 ${loadedFiles} 个分片`;await new Promise(resolve=>setTimeout(resolve,0));}}));
  notice.textContent='正在建立全场景碰撞结构…';await new Promise(resolve=>setTimeout(resolve,30));
- for(const model of models){model.scene.updateMatrixWorld(true);model.scene.traverse(mesh=>{if(!mesh.isMesh)return;for(const material of (Array.isArray(mesh.material)?mesh.material:[mesh.material])){material.metalness=.05;material.roughness=.8}const geometry=mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);geometry.computeBoundingBox();const name=mesh.name;const label=name.includes('_tree_')?(name.includes('trunk')?'树干':'树冠'):name.includes('slope')?'缓坡':name.startsWith('source_1227')?'湖面（触水）':geometry.boundingBox.max.y>5?'建筑':'地面';colliders.push({bvh:new MeshBVH(geometry,{maxLeafTris:12}),box:geometry.boundingBox.clone(),label});});}
+ for(const model of models){model.scene.updateMatrixWorld(true);model.scene.traverse(mesh=>{if(!mesh.isMesh)return;const geometry=mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);geometry.computeBoundingBox();const name=mesh.name;const label=name.includes('_tree_')?(name.includes('trunk')?'树干':'树冠'):name.includes('slope')?'缓坡':name.startsWith('source_1227')?'湖面（触水）':geometry.boundingBox.max.y>5?'建筑':'地面';colliders.push({bvh:new MeshBVH(geometry,{maxLeafTris:12}),box:geometry.boundingBox.clone(),label});});}
  const traffic=new T.Group();for(const angle of [0,Math.PI/2]){const arm=new T.Mesh(new T.BoxGeometry(2.6,.25,.25),new T.MeshStandardMaterial({color:'#ff6c35'}));arm.rotation.y=angle;traffic.add(arm)}traffic.add(new T.Mesh(new T.SphereGeometry(.5,12,8),new T.MeshStandardMaterial({color:'#ff9d60'})));scene.add(traffic);traffic.visible=false;
  const noFlyVolume=new T.Group(),noFlyWall=new T.Mesh(new T.CylinderGeometry(1,1,150,64,1,true),new T.MeshBasicMaterial({color:'#ff3d35',transparent:true,opacity:.16,side:T.DoubleSide,depthWrite:false}));noFlyVolume.add(noFlyWall);for(const y of [-75,75]){const ring=new T.Mesh(new T.TorusGeometry(1,.025,8,64),new T.MeshBasicMaterial({color:'#ff665d',transparent:true,opacity:.85,depthWrite:false}));ring.rotation.x=Math.PI/2;ring.position.y=y;noFlyVolume.add(ring)}scene.add(noFlyVolume);noFlyVolume.visible=false;
  window.worldCollision=(a,b)=>{
