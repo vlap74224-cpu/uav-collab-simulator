@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {MeshBVH} from 'three-mesh-bvh';
+import {createPerimeterFacadeStyler} from './perimeter-facades.js?v=facades1';
 const host=document.getElementById('flightView'),notice=document.getElementById('viewStatus');
 window.worldReady=false;let state={x:330,y:530,heading:0,altitude:60,status:'ready'},pitch=38,cameraYawOffset=0,focalLength=18,cameraRef=null,overview=false,cameraHeading=null,cameraPitch=null,lastFrame=0,viewDrag=null;
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),focalToFov=mm=>2*Math.atan(12/mm)*180/Math.PI,cameraPose=()=>({yawOffset:cameraYawOffset,pitch,focalLength,fov:focalToFov(focalLength)}),applyFocal=()=>{if(cameraRef){cameraRef.fov=focalToFov(focalLength);cameraRef.updateProjectionMatrix()}};
@@ -10,9 +11,11 @@ try{
  const scene=new T.Scene();scene.background=new T.Color('#b9cbd2');scene.fog=new T.Fog('#b9cbd2',650,1450);const surround=new T.Mesh(new T.PlaneGeometry(12000,12000),new T.MeshStandardMaterial({color:0x899488,roughness:1}));surround.rotation.x=-Math.PI/2;surround.position.y=-4;scene.add(surround);const camera=new T.PerspectiveCamera(68,1,.08,2200),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});cameraRef=camera;applyFocal();renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;host.append(renderer.domElement);scene.add(new T.HemisphereLight(0xe5f5ff,0x8a9271,1.95));const sun=new T.DirectionalLight(0xffffff,3);sun.position.set(-300,700,350);scene.add(sun);
  // Neutral source materials are very pale under the daylight fill. Keep the
  // authored landmark colours, and give untextured concrete a darker mineral palette.
+ const stylePerimeterMesh=createPerimeterFacadeStyler(renderer);
  const concreteMaterials=new WeakMap(),concreteTints=[0x9aabb6,0xa8aaa3,0x8f9da5,0xa49c91,0x879aa8];
  function styleModel(root){root.updateMatrixWorld(true);root.traverse(mesh=>{
   if(!mesh.isMesh)return;
+  if(stylePerimeterMesh(mesh))return;
   const box=new T.Box3().setFromObject(mesh),building=box.max.y>8&&!/tree|slope/i.test(mesh.name);
   const style=original=>{
    original.metalness=.05;original.roughness=.8;
