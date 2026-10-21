@@ -153,21 +153,38 @@ function raiseConflict(risk){
  state.route=C.clone(mission.route);state.status='review';state.presentedAt=Date.now();mission.title=mustWait?'绕行空间不足：建议悬停让行':'预测交汇冲突：绕行或等待让行';mission.reason=`按当前速度继续原航线，约 ${risk.seconds.toFixed(1)} s 后最近间隔 ${risk.distance.toFixed(1)} m，小于实验阈值 40 m。`;mission.summary=mustWait?'当前候选绕行未同时满足建筑净空与动态间隔，请选择等待让行。':'推荐路线已检查实体净空与动态间隔；也可等待让行。决策期间冻结双方位置。';log('present','动态冲突告警',JSON.stringify(risk),before);render();
 }
 async function planNoFlyRoutes(job,zone,origin){
- const altitude=job.altitude,scene={...job.mission,hazard:zone},routes=Sequence.n2Detours(origin,job.mission.destination.point,zone,job.route).sort((a,b)=>C.length(a)-C.length(b)),valid=[],cache=new Map();let deadline=performance.now()+4;
+ const altitude=job.altitude,scene={...job.mission,hazard:zone},goal=job.mission.destination.point,cache=new Map(),points=new Map();let deadline=performance.now()+4;
  const active=()=>mission===job.mission&&noFlyPlanJob===job;
- for(const route of routes){
-  if(!active())return null;if(C.validate(route,scene,altitude,job.speed).length)continue;let safe=true;
-  for(let i=1;i<route.length&&safe;i++){
-   const a=route[i-1],b=route[i],key=JSON.stringify([a,b,altitude]);if(cache.has(key)){safe=cache.get(key);continue}
-   const count=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/3));
-   for(let j=0;j<=count;j++){
-    if(performance.now()>=deadline){await new Promise(resolve=>setTimeout(resolve,0));if(!active())return null;deadline=performance.now()+4}
-    const t=j/count,point={x:a[0]+(b[0]-a[0])*t,y:a[1]+(b[1]-a[1])*t,z:altitude};
-    if(((window.worldPointClearance?window.worldPointClearance(point):window.worldClearance?.(point,point,3))?.distance??0)<=21.8){safe=false;break}
+ const yieldWork=async()=>{if(performance.now()>=deadline){await new Promise(resolve=>setTimeout(resolve,0));deadline=performance.now()+4}if(!active())throw new Error('Planning cancelled')};
+ const safeSegment=async(a,b)=>{
+  const key=JSON.stringify([a,b]);if(cache.has(key))return cache.get(key);
+  if(a.concat(b).some(v=>!Number.isFinite(v))||[a,b].some(p=>p[0]<C.workArea.minX||p[0]>C.workArea.maxX||p[1]<C.workArea.minY||p[1]>C.workArea.maxY)||C.distanceToSegment([zone.x,zone.y],a,b)<zone.r+zone.margin+1){cache.set(key,false);return false}
+  const count=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/3));let safe=true;
+  for(let j=0;j<=count;j++){await yieldWork();const t=j/count,point={x:a[0]+(b[0]-a[0])*t,y:a[1]+(b[1]-a[1])*t,z:altitude},pk=point.x.toFixed(3)+','+point.y.toFixed(3);let distance=points.get(pk);if(distance===undefined){distance=(window.worldPointClearance?window.worldPointClearance(point):window.worldClearance?.(point,point,3))?.distance??0;points.set(pk,distance)}if(distance<=21.8){safe=false;break}}
+  if(safe&&window.worldCollision?.({x:a[0],y:a[1],z:altitude},{x:b[0],y:b[1],z:altitude}))safe=false;
+  cache.set(key,safe);return safe;
+ };
+ const valid=[];
+ for(const route of Sequence.n2Detours(origin,goal,zone,job.route).sort((a,b)=>C.length(a)-C.length(b))){await yieldWork();if(C.validate(route,scene,altitude,job.speed).length)continue;let safe=true;for(let i=1;i<route.length&&safe;i++)safe=await safeSegment(route[i-1],route[i]);if(safe){valid.push(route);if(valid.length===2)return valid}}
+ // Fixed offset templates may all hit the same building. Search the actual
+ // free space instead, retaining the destination and the same safety checks.
+ for(const spacing of [24,12]){
+  const heap=[],best=new Map(),closed=new Set(),heuristic=p=>Math.hypot(p[0]-goal[0],p[1]-goal[1]);
+  const push=n=>{heap.push(n);let i=heap.length-1;while(i){const parent=(i-1)>>1;if(heap[parent].f<=n.f)break;heap[i]=heap[parent];i=parent}heap[i]=n};
+  const pop=()=>{const first=heap[0],last=heap.pop();if(heap.length){let i=0;while(i*2+1<heap.length){let child=i*2+1;if(child+1<heap.length&&heap[child+1].f<heap[child].f)child++;if(last.f<=heap[child].f)break;heap[i]=heap[child];i=child}heap[i]=last}return first};
+  push({x:0,y:0,p:origin,g:0,f:heuristic(origin),parent:null});best.set('0,0',0);
+  while(heap.length){await yieldWork();const node=pop(),key=node.x+','+node.y;if(closed.has(key))continue;closed.add(key);
+   if(heuristic(node.p)<=spacing*2&&await safeSegment(node.p,goal)){
+    const path=[goal];for(let n=node;n;n=n.parent)path.unshift(n.p);const smooth=[path[0]];let index=0;
+    while(index<path.length-1){let next=path.length-1;while(next>index+1&&!await safeSegment(path[index],path[next]))next--;smooth.push(path[next]);index=next}
+    if(!C.validate(smooth,scene,altitude,job.speed).length)return [smooth];break;
    }
-   cache.set(key,safe);
+   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
+    const x=node.x+dx,y=node.y+dy,k=x+','+y,p=[origin[0]+x*spacing,origin[1]+y*spacing],g=node.g+Math.hypot(dx,dy)*spacing;
+    if(closed.has(k)||g>=(best.get(k)??Infinity)||scene.battery-(g+heuristic(p))*.016<15)continue;
+    if(!await safeSegment(node.p,p))continue;best.set(k,g);push({x,y,p,g,f:g+heuristic(p),parent:node});
+   }
   }
-  if(safe){valid.push(route);if(valid.length===2)break}
  }
  return valid;
 }
@@ -204,5 +221,7 @@ $('simRate').value=String(state.simRate||4);if(mission){$('destinationInput').va
 
 
 
-window.addEventListener('world-ready',()=>render());
+window.addEventListener('world-ready',()=>{render();if(mission?.id==='N2'&&state.noFlyDetected&&state.status==='review'&&mission.hazard&&C.validate(state.route,mission,state.altitude,state.speed).length){
+ const origin=currentPosition(),job={mission,route:C.clone(mission.interruptedRoute||state.route),altitude:state.altitude,speed:state.speed,waiting:true};noFlyPlanJob=job;state.status='paused';mission.title='正在重新计算安全绕飞路线';mission.summary='正在根据建筑与禁飞区边界重新寻路，请稍候。';render();planNoFlyRoutes(job,mission.hazard,[origin.x,origin.y]).then(routes=>{if(mission!==job.mission||noFlyPlanJob!==job)return;mission.precomputedNoFlyRoutes=routes||[];noFlyPlanJob=null;raiseNoFlyZone()}).catch(error=>{if(mission!==job.mission||noFlyPlanJob!==job)return;noFlyPlanJob=null;mission.precomputedNoFlyRoutes=[];log('no_fly_plan_error','重新寻路失败',String(error));raiseNoFlyZone()});
+ }});
 
