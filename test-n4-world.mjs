@@ -12,7 +12,8 @@ function collision(a,b){const pa=new T.Vector3(a.x-450,a.z,a.y-330),pb=new T.Vec
 const m=Sequence.make(2,Sequence.points[2].point,82);
 function scan(route){return route.slice(1).map((b,i)=>{const a=route[i],n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/2);let min=Infinity,point;for(let j=0;j<=n;j++){const t=j/n,p={x:a[0]+t*(b[0]-a[0]),y:a[1]+t*(b[1]-a[1]),z:60},d=clearance(p).distance;if(d<min){min=d;point=p}}return{segment:i+1,min,point,hit:collision({x:a[0],y:a[1],z:60},{x:b[0],y:b[1],z:60})}})}
 
-assert.deepEqual(m.destination.point,[618,816]);assert.equal(m.controlPoints.length,6);for(const p of m.controlPoints)assert(m.route.some(q=>q[0]===p[0]&&q[1]===p[1]),'retain all six user checkpoints');
+assert.deepEqual(m.destination.point,[618,816]);assert.equal(m.controlPoints.length,5);assert.equal(m.route.length,6);for(const p of m.controlPoints)assert(m.route.some(q=>q[0]===p[0]&&q[1]===p[1]),'retain the simplified control points');
+for(let i=1;i<m.route.length;i++)assert(C.length(m.route.slice(i-1,i+1))>=140,'avoid short zigzag legs');for(let i=1;i<m.route.length-1;i++){const a=m.route[i-1],b=m.route[i],c=m.route[i+1],u=[b[0]-a[0],b[1]-a[1]],v=[c[0]-b[0],c[1]-b[1]],angle=Math.acos(Math.max(-1,Math.min(1,(u[0]*v[0]+u[1]*v[1])/Math.hypot(...u)/Math.hypot(...v))))*180/Math.PI;assert(angle>35&&angle<120,'keep only deliberate main turns')}
 const segments=scan(m.route);for(const segment of segments){assert(segment.min>21.8,'N4 must stay green with margin: '+JSON.stringify(segment));assert.equal(segment.hit,null,'N4 segment must not collide')}
 assert.deepEqual(C.validate(m.route,m,60,12),[]);
 const Traffic=require('./dist/traffic.js'),target=Traffic.create(m.route[0],m.destination.point,12,m.route),cross=C.sample(m.route,target.crossProgress),traffic=Traffic.position(target,target.crossTime);assert(Math.hypot(cross.x-traffic.x,cross.y-traffic.y)<.01,'N4 dynamic crossing must follow revised route');
