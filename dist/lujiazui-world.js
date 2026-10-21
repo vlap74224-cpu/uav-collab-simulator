@@ -53,7 +53,7 @@ try{
  function endViewDrag(e){if(viewDrag?.id!==e.pointerId)return;setCamera({...cameraPose(),final:true,source:'drag'},true);viewDrag=null;renderer.domElement.classList.remove('camera-dragging')}
  renderer.domElement.addEventListener('pointerup',endViewDrag);renderer.domElement.addEventListener('pointercancel',endViewDrag);renderer.domElement.addEventListener('lostpointercapture',endViewDrag);
  function draw(now){requestAnimationFrame(draw);const pos=vector(state),targetHeading=(state.heading+cameraYawOffset)*Math.PI/180,dt=lastFrame?Math.min(.1,(now-lastFrame)/1000):0;lastFrame=now;
-  cameraHeading=cameraHeading===null?targetHeading:FlightControls.smoothHeading(cameraHeading,targetHeading,dt,95,5);const heading=cameraHeading,targetPitch=pitch*Math.PI/180;
+  cameraHeading=cameraHeading===null?targetHeading:FlightControls.smoothHeading(cameraHeading,targetHeading,dt*(state.cameraTrackingRate||1),95,5);const heading=cameraHeading,targetPitch=pitch*Math.PI/180;
   cameraPitch=cameraPitch===null?targetPitch:FlightControls.smoothHeading(cameraPitch,targetPitch,dt,60,4);
   if(overview){camera.position.set(680,670,820);camera.lookAt(0,20,0)}else{camera.position.copy(pos);const p=cameraPitch;camera.lookAt(pos.clone().add(new T.Vector3(Math.sin(heading)*Math.cos(p),-Math.sin(p),-Math.cos(heading)*Math.cos(p))))}
   camera.updateMatrixWorld();

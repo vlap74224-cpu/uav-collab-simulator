@@ -46,7 +46,7 @@ for(let i=0;i<4;i++){
   assert.ok((zone.triggerProgress-m.plannedNoFlyZone.revealProgress)*C.length(editedRoute)/12>=21);
   for(const route of validDetours){assert.deepEqual(route[0],[trigger.x,trigger.y]);assert.deepEqual(route.at(-1),m.destination.point)}
  }
-if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);assert.equal(m.routeRevision,'n4-user-six-v5');assert.deepEqual(S.points[3].point,[618,816]);assert.deepEqual(m.route,[[1150,180],[1000,214],[1030,360],[1054,384],[1030,432],[958,456],[838,456],[814,410],[844,520],[796,520],[772,568],[772,664],[724,712],[676,688],[652,640],[618,816]]);assert.deepEqual(C.validate(m.initialRoute,m),[])}
+if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);assert.equal(m.routeRevision,'n4-visible-straight-v6');assert.deepEqual(S.points[3].point,[618,816]);assert.deepEqual(m.route,[[1150,180],[1000,214],[1038,360],[1038,434],[958,456],[838,456],[814,410],[844,520],[796,520],[772,568],[772,664],[724,712],[676,688],[652,640],[618,816]]);assert.deepEqual(C.validate(m.initialRoute,m),[])}
  if(i===3){assert.ok(m.battery<=battery);assert.ok(m.battery-C.length(m.route)*.016>=15,'new D must preserve the final-leg energy reserve')}
  battery=m.battery-C.length(m.route)*.016;
  const halfway=C.sample(m.route,.3),resumed=S.make(i,[halfway.x,halfway.y],battery);
