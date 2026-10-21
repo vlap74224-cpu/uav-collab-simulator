@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {MeshBVH} from 'three-mesh-bvh';
-import {createPerimeterFacadeStyler} from './perimeter-facades.js?v=facades1';
+import {createPerimeterFacadeStyler} from './perimeter-facades.js?v=facades2';
 const host=document.getElementById('flightView'),notice=document.getElementById('viewStatus');
 window.worldReady=false;let state={x:330,y:530,heading:0,altitude:60,status:'ready'},pitch=38,cameraYawOffset=0,focalLength=18,cameraRef=null,overview=false,cameraHeading=null,cameraPitch=null,lastFrame=0,viewDrag=null;
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),focalToFov=mm=>2*Math.atan(12/mm)*180/Math.PI,cameraPose=()=>({yawOffset:cameraYawOffset,pitch,focalLength,fov:focalToFov(focalLength)}),applyFocal=()=>{if(cameraRef){cameraRef.fov=focalToFov(focalLength);cameraRef.updateProjectionMatrix()}};

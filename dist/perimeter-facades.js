@@ -5,21 +5,24 @@ import * as T from 'three';
 export function createPerimeterFacadeStyler(renderer){
  const materials=new Map();
  const texture=draw=>{const canvas=document.createElement('canvas');canvas.width=canvas.height=256;draw(canvas.getContext('2d'));const map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;map.wrapS=map.wrapT=T.RepeatWrapping;map.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return map};
+ // Quiet blue-grey glazing and continuous floor bands, without heavy window frames.
  const facades=[0,1].map(style=>texture(ctx=>{
-  ctx.fillStyle=style?'#a7a294':'#8f9da2';ctx.fillRect(0,0,256,256);
-  for(let floor=0;floor<4;floor++)for(let bay=0;bay<4;bay++){
-   const x=bay*64,y=floor*64,inset=style?15:5,w=64-inset*2,h=style?36:43;
-   // A shallow painted reveal and varied blue-grey glazing are enough at flight distance.
-   ctx.fillStyle='#5b6568';ctx.fillRect(x+inset-2,y+9,w+4,h+4);
-   ctx.fillStyle=['#45616e','#536e79','#3d5967','#617d87'][(bay+floor*3+style)%4];ctx.fillRect(x+inset,y+11,w,h);
-   ctx.fillStyle='rgba(197,216,219,.22)';ctx.fillRect(x+inset+2,y+13,w-4,4);
-   ctx.fillStyle='#a5b1b3';ctx.fillRect(x+31,y+11,2,h);
-   ctx.fillStyle='rgba(27,39,43,.25)';ctx.fillRect(x+inset,y+11,w,2);
-   ctx.fillStyle=style?'#8a887e':'#6c7d83';ctx.fillRect(x,y+59,64,3);
-   ctx.fillStyle=style?'#c1bdb0':'#aab7bb';ctx.fillRect(x,y+62,64,2);
+  ctx.fillStyle=style?'#a9afad':'#929fa3';ctx.fillRect(0,0,256,256);
+  const glazing=ctx.createLinearGradient(0,0,256,0);
+  glazing.addColorStop(0,style?'#7c9097':'#7a929d');
+  glazing.addColorStop(.45,style?'#8a9ca1':'#8fa4ac');
+  glazing.addColorStop(1,style?'#7e9299':'#7d959f');
+  for(let floor=0;floor<4;floor++){
+   const y=floor*64,top=style?18:6,height=style?29:45;
+   ctx.fillStyle=glazing;ctx.fillRect(0,y+top,256,height);
+   ctx.fillStyle=style?'#9da8a9':'#a0adb1';
+   const spacing=style?128:32,width=style?5:1;
+   for(let x=0;x<256;x+=spacing)ctx.fillRect(x,y+top,width,height);
+   ctx.fillStyle=style?'#909c9e':'#7f9198';ctx.fillRect(0,y+top+height,256,1);
+   ctx.fillStyle=style?'#a0a8a7':'#87989e';ctx.fillRect(0,y+61,256,2);
   }
  }));
- const roof=texture(ctx=>{ctx.fillStyle='#7e8582';ctx.fillRect(0,0,256,256);for(let i=0;i<256;i+=64){ctx.fillStyle='#626c69';ctx.fillRect(i,0,2,256);ctx.fillRect(0,i,256,2);ctx.fillStyle='#969d98';ctx.fillRect(i+2,0,1,256);ctx.fillRect(0,i+2,256,1);}});
+ const roof=texture(ctx=>{ctx.fillStyle='#7e8582';ctx.fillRect(0,0,256,256);for(let i=0;i<256;i+=64){ctx.fillStyle='#747e7a';ctx.fillRect(i,0,1,256);ctx.fillRect(0,i,256,1);ctx.fillStyle='#868f89';ctx.fillRect(i+2,0,1,256);ctx.fillRect(0,i+2,256,1);}});
  function materialFor(original,style){
   const key=original.uuid+':'+style;if(materials.has(key))return materials.get(key);
   const material=original.clone();material.color.set('#ffffff');material.metalness=.05;material.roughness=.82;material.flatShading=true;
@@ -36,7 +39,7 @@ export function createPerimeterFacadeStyler(renderer){
     vec3 perimeterRoofColour=texture2D(perimeterRoof,vPerimeterPosition.xz/24.0).rgb;
     diffuseColor.rgb*=mix(perimeterWallColour,perimeterRoofColour,smoothstep(0.65,0.9,abs(perimeterNormal.y)));`);
   };
-  material.customProgramCacheKey=()=> 'perimeter-facades-v1';materials.set(key,material);return material;
+  material.customProgramCacheKey=()=> 'perimeter-facades-v2';materials.set(key,material);return material;
  }
  return mesh=>{
   // These source IDs are the simple surrounding blocks, not the detailed landmarks.
