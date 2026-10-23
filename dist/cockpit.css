@@ -46,3 +46,7 @@ body.map-expanded .minimap{left:18px;right:350px;top:125px;bottom:155px;width:au
 /* Mission selection lives in the navigation slot formerly used by flight status. */
 .mission-nav-trigger{height:100%;border:0;border-radius:0;padding:0 20px;background:#7fc74422;color:#c6fa98;font-weight:700}.mission-nav-trigger:hover{background:#7fc74438}.camera-strip{justify-content:flex-end}.destination{top:57px;left:157px;z-index:21;border-radius:0 0 10px 10px}@media(max-width:1050px) and (min-width:761px){.destination{left:131px}}
 
+
+body.free-flight-active #flightView canvas{cursor:grab;touch-action:none}body.free-flight-active #flightView canvas.camera-dragging{cursor:grabbing}
+
+#viewStatus{margin-right:auto;background:#14201de8;padding:7px 10px;border-radius:5px;font-size:12px;letter-spacing:0}

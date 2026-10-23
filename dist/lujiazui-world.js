@@ -40,14 +40,23 @@ try{
  const resize=()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()};addEventListener('resize',resize);resize();
  // Start drawing immediately so the scene does not look blank while the 34 model parts load.
  const drawLoading=()=>{if(window.worldReady)return;const pos=vector(state),heading=(state.heading+cameraYawOffset)*Math.PI/180,p=pitch*Math.PI/180;camera.position.copy(pos);camera.lookAt(pos.clone().add(new T.Vector3(Math.sin(heading)*Math.cos(p),-Math.sin(p),-Math.cos(heading)*Math.cos(p))));renderer.render(scene,camera);requestAnimationFrame(drawLoading)};requestAnimationFrame(drawLoading);
- notice.textContent='正在完整加载陆家嘴模型（含外围完整建筑）…';
+ notice.hidden=false;notice.textContent='正在完整加载陆家嘴模型（含外围完整建筑）…';
  const files=await (await fetch('assets/model-parts.json?v=full1')).json(),models=new Array(files.length),loader=new GLTFLoader();let nextFile=0,loadedFiles=0;
+ // Persist immutable model parts across page releases; unavailable storage falls back to HTTP.
+ const modelCache=await globalThis.caches?.open('uav-model-full1').catch(()=>null);
+ async function loadModel(file){
+  const url=new URL('assets/'+file+'?v=full1',location.href).href;
+  let response=await modelCache?.match(url).catch(()=>null);
+  if(!response){response=await fetch(url);if(!response.ok)throw new Error('模型下载失败 '+response.status);if(modelCache)modelCache.put(url,response.clone()).catch(()=>{});}
+  return loader.parseAsync(await response.arrayBuffer(),new URL('assets/',location.href).href);
+ }
+
  // Keep the full mesh, but limit concurrent downloads/decodes so mobile browsers
  // do not receive all 218 MB at once and exhaust memory before the UI appears.
  const constrainedDevice=matchMedia('(max-width: 900px)').matches||(Number(navigator.deviceMemory)||8)<=4,loadConcurrency=Math.min(files.length,constrainedDevice?4:12);
- await Promise.all(Array.from({length:loadConcurrency},async()=>{while(nextFile<files.length){const index=nextFile++,file=files[index],model=await loader.loadAsync(`assets/${file}?v=full1`);models[index]=model;styleModel(model.scene);scene.add(model.scene);loadedFiles++;notice.textContent=`正在加载完整陆家嘴模型 ${loadedFiles}/${files.length} · 已显示 ${loadedFiles} 个分片`;await new Promise(resolve=>setTimeout(resolve,0));}}));
+ await Promise.all(Array.from({length:loadConcurrency},async()=>{while(nextFile<files.length){const index=nextFile++,file=files[index],model=await loadModel(file);models[index]=model;styleModel(model.scene);scene.add(model.scene);loadedFiles++;notice.textContent=`正在加载完整陆家嘴模型 ${loadedFiles}/${files.length} · 已显示 ${loadedFiles} 个分片`;await new Promise(resolve=>setTimeout(resolve,0));}}));
  notice.textContent='正在建立全场景碰撞结构…';await new Promise(resolve=>setTimeout(resolve,30));
- for(const model of models){model.scene.updateMatrixWorld(true);model.scene.traverse(mesh=>{if(!mesh.isMesh)return;const geometry=mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);geometry.computeBoundingBox();const name=mesh.name;const label=name.includes('_tree_')?(name.includes('trunk')?'树干':'树冠'):name.includes('slope')?'缓坡':name.startsWith('source_1227')?'湖面（触水）':geometry.boundingBox.max.y>5?'建筑':'地面';colliders.push({bvh:new MeshBVH(geometry,{maxLeafTris:12}),box:geometry.boundingBox.clone(),label});});}
+ const meshes=[];for(const model of models){model.scene.updateMatrixWorld(true);model.scene.traverse(mesh=>{if(mesh.isMesh)meshes.push(mesh)});}let sliceStart=performance.now(),built=0;for(const mesh of meshes){const geometry=mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);geometry.computeBoundingBox();const name=mesh.name;const label=name.includes('_tree_')?(name.includes('trunk')?'树干':'树冠'):name.includes('slope')?'缓坡':name.startsWith('source_1227')?'湖面（触水）':geometry.boundingBox.max.y>5?'建筑':'地面';colliders.push({bvh:new MeshBVH(geometry,{maxLeafTris:12}),box:geometry.boundingBox.clone(),label});built++;if(performance.now()-sliceStart>24){notice.textContent=`正在准备飞行环境 ${built}/${meshes.length}`;await new Promise(resolve=>setTimeout(resolve,0));sliceStart=performance.now();}}
  const traffic=new T.Group();for(const angle of [0,Math.PI/2]){const arm=new T.Mesh(new T.BoxGeometry(2.6,.25,.25),new T.MeshStandardMaterial({color:'#ff6c35'}));arm.rotation.y=angle;traffic.add(arm)}traffic.add(new T.Mesh(new T.SphereGeometry(.5,12,8),new T.MeshStandardMaterial({color:'#ff9d60'})));scene.add(traffic);traffic.visible=false;
  const noFlyVolume=new T.Group(),noFlyWall=new T.Mesh(new T.CylinderGeometry(1,1,150,64,1,true),new T.MeshBasicMaterial({color:'#ff3d35',transparent:true,opacity:.16,side:T.DoubleSide,depthWrite:false}));noFlyVolume.add(noFlyWall);for(const y of [-75,75]){const ring=new T.Mesh(new T.TorusGeometry(1,.025,8,64),new T.MeshBasicMaterial({color:'#ff665d',transparent:true,opacity:.85,depthWrite:false}));ring.rotation.x=Math.PI/2;ring.position.y=y;noFlyVolume.add(ring)}scene.add(noFlyVolume);noFlyVolume.visible=false;
  window.worldCollision=(a,b)=>{
@@ -78,7 +87,7 @@ try{
  window.UAVSafetyBoundary={horizontalLimits,verticalLimits,reference:'DJI Mavic 3E/3M'};
  const viewButton=document.createElement('button');viewButton.textContent='三维地图总览';viewButton.onclick=()=>{overview=!overview;viewButton.textContent=overview?'返回机载视角':'三维地图总览'};document.querySelector('.camera-strip').append(viewButton);
  window.flightView={update:s=>state=s,pitch:v=>setCamera({pitch:v}),setCamera,nudgeCamera:(yawDelta=0,pitchDelta=0)=>setCamera({yawOffset:cameraYawOffset+Number(yawDelta),pitch:pitch+Number(pitchDelta),source:'button'},true),getCamera:cameraPose,capture:()=>renderer.domElement.toDataURL('image/png')};
- renderer.domElement.addEventListener('pointerdown',e=>{if(state.status!=='photo'||e.button!==0||overview)return;e.preventDefault();viewDrag={id:e.pointerId,x:e.clientX,y:e.clientY,start:cameraPose()};renderer.domElement.setPointerCapture(e.pointerId);renderer.domElement.classList.add('camera-dragging')});
+ renderer.domElement.addEventListener('pointerdown',e=>{if((state.status!=='photo'&&!state.freeFlight)||e.button!==0||overview)return;e.preventDefault();viewDrag={id:e.pointerId,x:e.clientX,y:e.clientY,start:cameraPose()};renderer.domElement.setPointerCapture(e.pointerId);renderer.domElement.classList.add('camera-dragging')});
  renderer.domElement.addEventListener('pointermove',e=>{if(viewDrag?.id!==e.pointerId)return;e.preventDefault();setCamera({yawOffset:viewDrag.start.yawOffset-(e.clientX-viewDrag.x)*.22,pitch:viewDrag.start.pitch-(e.clientY-viewDrag.y)*.16,source:'drag'},true)});
  function endViewDrag(e){if(viewDrag?.id!==e.pointerId)return;setCamera({...cameraPose(),final:true,source:'drag'},true);viewDrag=null;renderer.domElement.classList.remove('camera-dragging')}
  renderer.domElement.addEventListener('pointerup',endViewDrag);renderer.domElement.addEventListener('pointercancel',endViewDrag);renderer.domElement.addEventListener('lostpointercapture',endViewDrag);
@@ -105,6 +114,6 @@ try{
   zone=zone||Sequence.n2DynamicNoFlyZone(n2.route,n2.plannedNoFlyZone.revealProgress,()=>.5);const n2Routes=[n2.initialRoute,...detours];results.push({name:'N2 valid detour candidates',count:detours.length,searchStats,pass:detours.length>0});for(const [i,route] of n2Routes.entries()){const collisions=route.slice(1).map((p,j)=>window.worldCollision({x:route[j][0],y:route[j][1],z:60},{x:p[0],y:p[1],z:60})),clearances=route.slice(1).map((p,j)=>window.worldClearance({x:route[j][0],y:route[j][1],z:60},{x:p[0],y:p[1],z:60},3).distance),zoneDistances=i?route.slice(1).map((p,j)=>UAV.distanceToSegment([zone.x,zone.y],route[j],p)):[];results.push({name:['N2 normal route','N2 AI detour','N2 alternate detour'][i],collisions,clearances,zoneDistances,pass:collisions.every(x=>!x)&&Math.min(...clearances)>21.8&&(!i||Math.min(...zoneDistances)>zone.r+zone.margin)})}
   const report=document.createElement('pre');report.id='modelQa';report.hidden=true;report.textContent=JSON.stringify(results);document.body.append(report);host.dataset.qaPassed=String(results.every(r=>r.pass));
  }
-host.dataset.worldSource='Lujiazui fixed mesh';host.dataset.colliderCount=colliders.length;window.worldReady=true;notice.textContent='陆家嘴实体场景已就绪 · 树林与缓坡为实验补建';window.dispatchEvent(new Event('world-ready'));requestAnimationFrame(draw);
-}catch(e){notice.textContent='模型加载失败：'+e.message;host.dataset.worldError=e.message;console.error(e)}
+host.dataset.worldSource='Lujiazui fixed mesh';host.dataset.colliderCount=colliders.length;window.worldReady=true;notice.hidden=true;notice.textContent='陆家嘴实体场景已就绪 · 树林与缓坡为实验补建';window.dispatchEvent(new Event('world-ready'));requestAnimationFrame(draw);
+}catch(e){notice.hidden=false;notice.textContent='模型加载失败：'+e.message;host.dataset.worldError=e.message;console.error(e)}
 
