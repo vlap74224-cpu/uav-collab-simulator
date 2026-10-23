@@ -63,9 +63,10 @@ function make(index,origin,battery){
   m.reason='从 B 点进入东侧城区，沿道路与建筑外缘依次绕过多栋建筑，充分利用扩展地图后到达东北建筑群入口；飞行期间持续检查临时空域通告。';
  }
  if(index===2){m.route=[a,[1000,214],[1038,434],[772,532],[772,676],b];m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n4-long-legs-v7';m.controlPoints=[[1000,214],[1038,434],[772,532],[772,676],[618,816]];m.title='沿五个长航段绕建筑飞往 D 点';m.subtype='dynamic';m.reason='N4 沿城区通道以五个长航段飞行，仅保留四次主要转向；D 点位于操作者原图点 6，60 m 高度下最小建筑净距超过 21.8 m；交通目标在直线航段从前方以 9 m/s 接近，起飞后按双方位置和速度持续预测未来 30 秒的最近间隔。';m.limits+=' 采用匀速交通目标和三维间隔预测，40 m 为实验告警阈值，非真实适航标准。';}
- if(index===3){m.battery=Math.min(battery,Math.ceil(C.length([a,b])*.016+17));m.alternative=[a,points[0].point.slice()];m.title='电量余量下降，选择继续或返航';m.reason='实验注入电量下降。按固定每米耗电模型，直达 E 尚可保留 15% 余量；返航方案需单独检查，可能因距离过长而不可行。';m.limits+=' 能耗未计风速、载荷和电池老化。';}
+ if(index===3){m.battery=Math.min(battery,Math.ceil(C.length([a,b])*.016+17));m.alternative=[a,points[0].point.slice()];m.title='电量余量下降，选择继续或返航';m.landingOnArrival=true;m.reason='实验注入电量下降。按固定每米耗电模型，直达 E 尚可保留 15% 余量；返航方案需单独检查，可能因距离过长而不可行。';m.limits+=' 能耗未计风速、载荷和电池老化。';}
  m.event=`${m.id} ${m.name} · ${'ABCDE'[index]} → ${'ABCDE'[index+1]}`;m.summary=m.title+'。请接受、修改或拒绝；确认后继续同一任务。';
  if(index===0)m.summary='路线包含 11 个互不交叉的航段和 4 个拍照打卡点；整体沿手绘外围环线，仅在碰撞位置局部绕障，完整模型最小净距约 22.0 m。请先复核路线。';
+ if(index===3)m.summary+=' 到达选定终点后将自动下降着陆。';
  if(index===1){m.event='N2 航迹转向 · 跨城区正常巡航阶段';m.summary='先沿约 1.07 公里的跨城区航线绕过多栋建筑前往新 C 点；AI 在飞行中持续检查前方空域变化。';}
  return m;
 }
