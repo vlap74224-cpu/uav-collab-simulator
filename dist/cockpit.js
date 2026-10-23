@@ -167,9 +167,9 @@ function consumeFlightBattery(dt){
  if(!(dt>0)||state.landed||!['running','manual','waiting','photo'].includes(state.status))return false;
  const speed=state.status==='running'&&!state.landing?state.speed:state.status==='manual'?(state.manualSpeed||0):0;
  const delta=(state.targetAltitude??state.altitude)-state.altitude;
- const vertical=state.landing?Math.abs(state.verticalSpeed||2)*.01:delta>.001?.06:delta<-.001?.03:0;
+ const vertical=state.landing?Math.abs(state.verticalSpeed||2)*.001:delta>.001?.006:delta<-.001?.003:0;
  const previous=state.battery??mission?.battery??82;
- state.battery=Math.max(0,previous-dt*(.01+Math.max(0,speed)*.016+vertical));
+ state.battery=Math.max(0,previous-dt*(.001+Math.max(0,speed)*.0016+vertical));
  return state.battery!==previous;
 }
 $('collisionTrial').onclick=()=>{if(!state.traffic||!state.conflictAlert)return;const before=snap(),p=currentPosition(),original=C.clone(mission.initialRoute),nearest=C.nearestPointOnRoute(original,[p.x,p.y]),tail=original.slice((nearest?.segmentIndex??0)+1);state.collisionExperiment=true;state.route=[[p.x,p.y],...tail];state.progress=0;state.manualPosition=null;state.manualDistance=0;state.targetAltitude=state.altitude;state.verticalSpeed=0;state.traffic=Traffic.collisionCourse(state.route,state.speed,state.altitude,state.traffic);state.status='running';state.resumeWaiting=false;mission.title='碰撞实验：保持原航线';mission.summary='已选择不避让；双方将在约 '+state.traffic.crossTime.toFixed(1)+' 秒后到达同一交汇点，实际接触时停止。';log('collision_override','选择保持原航线',JSON.stringify({crossTime:state.traffic.crossTime,point:state.traffic.collisionPoint,restarted:!!state.traffic.restarted}),before);render()};
@@ -217,7 +217,7 @@ async function planNoFlyRoutes(job,zone,origin){
    }
    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
     const x=node.x+dx,y=node.y+dy,k=x+','+y,p=[origin[0]+x*spacing,origin[1]+y*spacing],g=node.g+Math.hypot(dx,dy)*spacing;
-    if(closed.has(k)||g>=(best.get(k)??Infinity)||scene.battery-(g+heuristic(p))*.016<15)continue;
+    if(closed.has(k)||g>=(best.get(k)??Infinity)||scene.battery-(g+heuristic(p))*.0016<15)continue;
     if(!await safeSegment(node.p,p))continue;best.set(k,g);push({x,y,p,g,f:g+heuristic(p),parent:node});
    }
   }
