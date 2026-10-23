@@ -50,3 +50,5 @@ body.map-expanded .minimap{left:18px;right:350px;top:125px;bottom:155px;width:au
 body.free-flight-active #flightView canvas{cursor:grab;touch-action:none}body.free-flight-active #flightView canvas.camera-dragging{cursor:grabbing}
 
 #viewStatus{margin-right:auto;background:#14201de8;padding:7px 10px;border-radius:5px;font-size:12px;letter-spacing:0}
+
+.battery{transition:color .25s ease}.battery[data-tone="warning"]{color:#ffbd59}.battery[data-tone="critical"]{color:#ff6565}
