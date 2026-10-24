@@ -43,10 +43,10 @@ function updateFlightPicker(){const free=$('routeMode').value==='free';$('loadRo
 function startFreeFlight(){if(!window.worldReady){toast('请等待三维场景加载完成');return false}if(state.freeFlight){closeMissionPicker();return true}fresh();session.node='FREE';state.freeFlight=true;state.status='manual';state.manualPosition={x:330,y:530,heading:0};state.manualDistance=0;state.manualSpeed=0;state.simRate=1;$('simRate').value='1';window.flightView?.setCamera?.({yawOffset:0,pitch:12,focalLength:18});closeMissionPicker();log('free_flight_start','进入自由驾驶','无任务、无预设航线');render();window.focusMissionRoute?.([[100,300],[700,800]]);return true}
 let freeNavigationJob=0,freeDestinationPin=null;
 const freePlaces=[...Sequence.landmarks,...Sequence.points];if(state.freeFlight&&mission)$('freeDestination').value=mission.destination.name;
-for(const place of freePlaces){const option=document.createElement('option');option.value=place.shortName||place.name;$('freeDestinationOptions').append(option)}
+for(const place of freePlaces){const option=document.createElement('option');option.value=place.shortName||place.name;option.textContent=place.shortName||place.name;$('freeDestinationOptions').append(option)}
 function cancelFreeNavigation(){freeNavigationJob++;const p=currentPosition();stopManual();mission=null;draft=null;state.freePlanning=false;state.freeMapPicking=false;state.sequence=null;state.route=[[p.x,p.y],[p.x,p.y]];state.progress=0;state.manualPosition=p;state.status='manual';state.targetAltitude=state.altitude;state.verticalSpeed=0;$('freeNavigationStatus').textContent='';render()}
 async function planFreeDestination(e){e?.preventDefault();if(!state.freeFlight||!window.worldReady||state.status==='collision')return;
- const target=state.freeMapDestination&&$('freeDestination').value===state.freeMapDestination.name?state.freeMapDestination:FreeNavigation.resolve($('freeDestination').value,freePlaces);if(!target){$('freeNavigationStatus').textContent='请选择下拉列表中的地标，或输入完整地标名称。';return}
+ const target=state.freeMapDestination&&$('freeDestination').value===state.freeMapDestination.name?state.freeMapDestination:FreeNavigation.resolve($('freeDestination').value,freePlaces);if(!target){$('freeNavigationStatus').textContent='请从全部地点中选择，或输入完整地标名称。';return}
  cancelFreeNavigation();const job=++freeNavigationJob,owner=state,p=currentPosition(),altitude=state.altitude;state.status='paused';state.freePlanning=true;render();$('freeNavigationStatus').textContent='正在检查建筑并规划航线…';
  const active=()=>job===freeNavigationJob&&state===owner&&state.freeFlight&&state.status==='paused'&&state.altitude===altitude&&state.targetAltitude===altitude;
  try{const route=await FreeNavigation.plan({origin:[p.x,p.y],target,bounds:C.workArea,clearance:q=>window.worldPointClearance({x:q[0],y:q[1],z:altitude}).distance,collision:(a,b)=>window.worldCollision({x:a[0],y:a[1],z:altitude},{x:b[0],y:b[1],z:altitude}),active});if(!active())return;
@@ -68,7 +68,7 @@ function editFreeDestination(){
  $('planFreeDestination').textContent='重新规划航线';
  $('freeNavigationStatus').textContent=value.trim()?'目的地已修改，请重新规划航线。':'输入新目的地，或点击地图选点。';
 }
-$('freeDestination').addEventListener('input',editFreeDestination);
+$('freeDestination').addEventListener('input',editFreeDestination);$('freeDestinationOptions').onchange=()=>{const value=$('freeDestinationOptions').value;if(!value)return;$('freeDestination').value=value;editFreeDestination();$('freeDestinationOptions').value='';};
 $('freeDestinationForm').onsubmit=planFreeDestination;$('cancelFreeNavigation').onclick=cancelFreeNavigation;
 $('routeMode').onchange=updateFlightPicker;updateFlightPicker();
 function loadSelectedRoute(e){e?.preventDefault();if(mission){toast('请先点击新任务，再更换飞行范围');return}const selectedMode=$('routeMode').value;if(selectedMode==='free'){startFreeFlight();return}if(state.freeFlight)fresh();closeMissionPicker();const mode=selectedMode,index=mode==='all'?0:Number(mode),a=Sequence.points[index].point;state.route=[a,[a[0],a[1]-1]];state.trail=[a.slice()];state.sequence={index,single:mode!=='all'};log('sequence_start','加载航线',mode==='all'?'全程 A → E':'单段 '+ 'ABCDE'[index]+' → '+'ABCDE'[index+1]);presentStage(index)}
