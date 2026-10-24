@@ -38,7 +38,7 @@ function planDestination(dest){
  log('present','呈现 AI 建议',mission.name+' / '+dest.name,before);render();window.focusMissionRoute?.([...state.trail,...mission.route,...(mission.hazard&&(mission.id!=='N2'||state.noFlyVisible||state.noFlyDetected)?[[mission.hazard.x,mission.hazard.y]]:[])]);
 }
 function closeMissionPicker(){$('destinationPanel').hidden=true;$('toggleMission').setAttribute('aria-expanded','false')}
-function updateFlightPicker(){const free=$('routeMode').value==='free';$('loadRoute').textContent=free?'进入自由驾驶':'加载所选航线';$('destinationMessage').textContent=free?'无任务、无预设航线。进入后使用方向盘或键盘自由飞行。':'按飞行进度触发事件，处理后继续同一任务。'}
+function updateFlightPicker(){$('flightModeLabel').textContent=$('routeMode').selectedOptions[0].textContent;for(const button of $('flightModeOptions').children)button.setAttribute('aria-pressed',String(button.dataset.mode===$('routeMode').value));const free=$('routeMode').value==='free';$('loadRoute').textContent=free?'进入自由驾驶':'加载所选航线';$('destinationMessage').textContent=free?'无任务、无预设航线。进入后使用方向盘或键盘自由飞行。':'按飞行进度触发事件，处理后继续同一任务。'}
 function startFreeFlight(){if(!window.worldReady){toast('请等待三维场景加载完成');return false}if(state.freeFlight){closeMissionPicker();return true}fresh();session.node='FREE';state.freeFlight=true;state.status='manual';state.manualPosition={x:330,y:530,heading:0};state.manualDistance=0;state.manualSpeed=0;state.simRate=1;$('simRate').value='1';window.flightView?.setCamera?.({yawOffset:0,pitch:12,focalLength:18});closeMissionPicker();log('free_flight_start','进入自由驾驶','无任务、无预设航线');render();window.focusMissionRoute?.([[100,300],[700,800]]);return true}
 let freeNavigationJob=0,freeDestinationPin=null,freeRequestedPin=null;
 const freePlaces=[...Sequence.landmarks,...Sequence.points];if(state.freeFlight&&mission)$('freeDestination').value=mission.destination.name;
@@ -75,6 +75,7 @@ function editFreeDestination(){
 }
 $('freeDestination').addEventListener('input',editFreeDestination);$('freeDestinationOptions').onchange=()=>{const value=$('freeDestinationOptions').value;if(!value)return;$('freeDestination').value=value;editFreeDestination();$('freeDestinationOptions').value='';};
 $('freeDestinationForm').onsubmit=planFreeDestination;$('cancelFreeNavigation').onclick=cancelFreeNavigation;
+for(const option of $('routeMode').options){const button=document.createElement('button');button.type='button';button.textContent=option.textContent;button.dataset.mode=option.value;button.onclick=()=>{$('routeMode').value=option.value;updateFlightPicker();$('flightModePicker').open=false;};$('flightModeOptions').append(button)}
 $('routeMode').onchange=updateFlightPicker;updateFlightPicker();
 function loadSelectedRoute(e){e?.preventDefault();if(mission){toast('请先点击新任务，再更换飞行范围');return}const selectedMode=$('routeMode').value;if(selectedMode==='free'){startFreeFlight();return}if(state.freeFlight)fresh();closeMissionPicker();const mode=selectedMode,index=mode==='all'?0:Number(mode),a=Sequence.points[index].point;state.route=[a,[a[0],a[1]-1]];state.trail=[a.slice()];state.sequence={index,single:mode!=='all'};log('sequence_start','加载航线',mode==='all'?'全程 A → E':'单段 '+ 'ABCDE'[index]+' → '+'ABCDE'[index+1]);presentStage(index)}
 $('destinationForm').onsubmit=loadSelectedRoute;$('loadRoute').onclick=loadSelectedRoute;
