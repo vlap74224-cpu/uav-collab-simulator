@@ -45,7 +45,7 @@ try{
  });
  function status(){if(loadError)return;notice.textContent=ready?`真实三维地图已就绪 · 地形与建筑 © swisstopo · 高度基准 A 点`:'正在加载真实三维地形和建筑…'}
  window.flightView={update:s=>{state=s},pitch:v=>{pitch=Number(v)},capture:()=>scene.canvas.toDataURL('image/png'),overview:v=>{overview=v}};
- const viewButton=document.createElement('button');viewButton.id='worldOverview';viewButton.textContent='三维地图总览';viewButton.onclick=()=>{overview=!overview;viewButton.textContent=overview?'返回机载视角':'三维地图总览'};document.querySelector('.camera-strip').append(viewButton);
+ const viewButton=document.createElement('button');viewButton.id='worldOverview';viewButton.textContent='三维地图总览';viewButton.onclick=()=>{overview=!overview;viewButton.textContent=overview?'返回机载视角':'三维地图总览'};document.getElementById('overviewNav').append(viewButton);
  window.worldCollision=(a,b)=>{
   if(!ready)return null;const pa=cart(a.x,a.y,a.z),pb=cart(b.x,b.y,b.z),delta=C.Cartesian3.subtract(pb,pa,new C.Cartesian3()),length=C.Cartesian3.magnitude(delta);if(length<.001)return null;
   const ray=new C.Ray(pa,C.Cartesian3.normalize(delta,delta));let nearest=null;

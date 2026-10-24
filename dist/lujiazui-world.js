@@ -85,7 +85,7 @@ try{
  const tone=(d,limits)=>d<=limits.danger?'danger':d<=limits.warning?'warning':'normal';
  const flightSpeed=()=>state.status==='manual'?Math.max(0,state.manualSpeed||0):Math.max(0,state.speed||0);
  window.UAVSafetyBoundary={horizontalLimits,verticalLimits,reference:'DJI Mavic 3E/3M'};
- const viewButton=document.createElement('button');viewButton.textContent='三维地图总览';viewButton.onclick=()=>{overview=!overview;viewButton.textContent=overview?'返回机载视角':'三维地图总览'};document.querySelector('.camera-strip').append(viewButton);
+ const viewButton=document.createElement('button');viewButton.textContent='三维地图总览';viewButton.onclick=()=>{overview=!overview;viewButton.textContent=overview?'返回机载视角':'三维地图总览'};document.getElementById('overviewNav').append(viewButton);
  window.flightView={update:s=>state=s,pitch:v=>setCamera({pitch:v}),setCamera,nudgeCamera:(yawDelta=0,pitchDelta=0)=>setCamera({yawOffset:cameraYawOffset+Number(yawDelta),pitch:pitch+Number(pitchDelta),source:'button'},true),getCamera:cameraPose,capture:()=>renderer.domElement.toDataURL('image/png')};
  renderer.domElement.addEventListener('pointerdown',e=>{if((state.status!=='photo'&&!state.freeFlight)||e.button!==0||overview)return;e.preventDefault();viewDrag={id:e.pointerId,x:e.clientX,y:e.clientY,start:cameraPose()};renderer.domElement.setPointerCapture(e.pointerId);renderer.domElement.classList.add('camera-dragging')});
  renderer.domElement.addEventListener('pointermove',e=>{if(viewDrag?.id!==e.pointerId)return;e.preventDefault();setCamera({yawOffset:viewDrag.start.yawOffset-(e.clientX-viewDrag.x)*.22,pitch:viewDrag.start.pitch-(e.clientY-viewDrag.y)*.16,source:'drag'},true)});
