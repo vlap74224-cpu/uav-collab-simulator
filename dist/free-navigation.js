@@ -14,11 +14,16 @@ async function plan({origin,target,bounds,clearance,collision,active=()=>true}){
  else for(const radius of target.height?[40,65,100,145,200,260]:[24,48,72,100,145,200,260])for(let i=0;i<24;i++){const angle=i*Math.PI/12,p=[target.point[0]+radius*Math.cos(angle),target.point[1]+radius*Math.sin(angle)];if(await clear(p))goals.push(p)}
  if(!goals.length)throw Error('AI 已检查目标周边 260 米，当前高度没有安全停靠位置，请调整高度后重试');
  goals.sort((a,b)=>distance(target.point,a)-distance(target.point,b)||distance(origin,a)-distance(origin,b));
- for(const g of goals)if(await safe(origin,g))return [origin,g];
- const heuristic=p=>Math.min(...goals.map(g=>distance(p,g))),open=[{p:origin,g:0,f:heuristic(origin),parent:null}],best=new Map([['0,0',0]]),closed=new Set(),spacing=24;
+ // Prefer the closest safe arrival band before considering farther destinations.
+ // Do not move the destination away simply to obtain a straight flight.
+ const bands=[];for(const goal of goals){const radius=Math.round(distance(target.point,goal));let band=bands.find(b=>b.radius===radius);if(!band){band={radius,goals:[]};bands.push(band)}band.goals.push(goal)}
+ for(const band of bands){const candidates=band.goals;
+ for(const g of candidates)if(await safe(origin,g))return [origin,g];
+ const heuristic=p=>Math.min(...candidates.map(g=>distance(p,g))),open=[{p:origin,g:0,f:heuristic(origin),parent:null}],best=new Map([[origin.join(','),0]]),closed=new Set(),spacing=24;
  while(open.length&&closed.size<8000){await yieldWork();open.sort((a,b)=>b.f-a.f);const node=open.pop(),key=node.p.join(',');if(closed.has(key))continue;closed.add(key);
- for(const goal of goals.filter(g=>distance(node.p,g)<spacing*2))if(await safe(node.p,goal)){const path=[goal];for(let n=node;n;n=n.parent)path.unshift(n.p);const smooth=[origin];let i=0;while(i<path.length-1){let j=path.length-1;while(j>i+1&&!await safe(path[i],path[j]))j--;smooth.push(path[j]);i=j}return smooth}
+ for(const goal of candidates.filter(g=>distance(node.p,g)<spacing*2))if(await safe(node.p,goal)){const path=[goal];for(let n=node;n;n=n.parent)path.unshift(n.p);const smooth=[origin];let i=0;while(i<path.length-1){let j=path.length-1;while(j>i+1&&!await safe(path[i],path[j]))j--;smooth.push(path[j]);i=j}return smooth}
  for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){const p=[node.p[0]+dx*spacing,node.p[1]+dy*spacing],k=p.join(','),g=node.g+Math.hypot(dx,dy)*spacing;if(closed.has(k)||g>=(best.get(k)??Infinity)||!await safe(node.p,p))continue;best.set(k,g);open.push({p,g,f:g+heuristic(p),parent:node})}
+ }
  }
  throw Error('当前高度未找到安全航线，请调整高度或更换目的地');
 }
