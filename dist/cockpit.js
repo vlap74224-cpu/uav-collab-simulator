@@ -19,7 +19,6 @@ try{
  else{if(old){localStorage.removeItem(KEY);localStorage.removeItem(LEGACY_KEY);storageReset=true}records=[];fresh();log('session_start','开始会话',storageReset?'已清理不兼容记录并建立新会话':'进入飞行界面')}
 }catch{try{localStorage.removeItem(KEY);localStorage.removeItem(LEGACY_KEY)}catch{}records=[];fresh();save();storageReset=true}
 if(storageReset)setTimeout(()=>toast('旧记录已清理，新的实验会话可以正常保存'),0);
-$('destinationList').innerHTML=Sequence.points.map((p,i)=>'<div class=sequence-stop><b>'+p.name+'</b><small>'+(['N1 无交叉环线 · 四个拍照打卡点','N2 突发禁飞区 · AI 重规划','N4 动态冲突','N5 资源可行性下降','任务终点'][i])+'</small></div>').join('');
 function planDestination(dest){
  if(state.sequence){presentStage(state.sequence.index,true);return}
 
@@ -39,7 +38,7 @@ function planDestination(dest){
  log('present','呈现 AI 建议',mission.name+' / '+dest.name,before);render();window.focusMissionRoute?.([...state.trail,...mission.route,...(mission.hazard&&(mission.id!=='N2'||state.noFlyVisible||state.noFlyDetected)?[[mission.hazard.x,mission.hazard.y]]:[])]);
 }
 function closeMissionPicker(){$('destinationPanel').hidden=true;$('toggleMission').setAttribute('aria-expanded','false')}
-function updateFlightPicker(){const free=$('routeMode').value==='free';$('loadRoute').textContent=free?'进入自由驾驶':'加载所选航线';$('destinationList').hidden=free;$('destinationMessage').textContent=free?'无任务、无预设航线。进入后使用方向盘或键盘自由飞行。':'按飞行进度触发事件，处理后继续同一任务。'}
+function updateFlightPicker(){const free=$('routeMode').value==='free';$('loadRoute').textContent=free?'进入自由驾驶':'加载所选航线';$('destinationMessage').textContent=free?'无任务、无预设航线。进入后使用方向盘或键盘自由飞行。':'按飞行进度触发事件，处理后继续同一任务。'}
 function startFreeFlight(){if(!window.worldReady){toast('请等待三维场景加载完成');return false}if(state.freeFlight){closeMissionPicker();return true}fresh();session.node='FREE';state.freeFlight=true;state.status='manual';state.manualPosition={x:330,y:530,heading:0};state.manualDistance=0;state.manualSpeed=0;state.simRate=1;$('simRate').value='1';window.flightView?.setCamera?.({yawOffset:0,pitch:12,focalLength:18});closeMissionPicker();log('free_flight_start','进入自由驾驶','无任务、无预设航线');render();window.focusMissionRoute?.([[100,300],[700,800]]);return true}
 let freeNavigationJob=0,freeDestinationPin=null,freeRequestedPin=null;
 const freePlaces=[...Sequence.landmarks,...Sequence.points];if(state.freeFlight&&mission)$('freeDestination').value=mission.destination.name;
