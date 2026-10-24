@@ -52,3 +52,5 @@ body.free-flight-active #flightView canvas{cursor:grab;touch-action:none}body.fr
 #viewStatus{margin-right:auto;background:#14201de8;padding:7px 10px;border-radius:5px;font-size:12px;letter-spacing:0}
 
 .battery{transition:color .25s ease}.battery[data-tone="warning"]{color:#ffbd59}.battery[data-tone="critical"]{color:#ff6565}
+
+#freeDestinationForm{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}#freeDestinationForm label,#freeDestinationForm input,#freeNavigationStatus,#cancelFreeNavigation{grid-column:1/-1}#freeDestinationForm button{width:auto;margin:0;padding:7px 5px}#freeNavigationStatus{margin:0;line-height:1.4}
