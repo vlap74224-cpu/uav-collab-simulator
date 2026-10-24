@@ -58,3 +58,30 @@ body.free-flight-active #flightView canvas{cursor:grab;touch-action:none}body.fr
 #freeDestinationOptions{grid-column:1/-1;margin:0;padding:7px 9px;color:#e6f3e8}
 
 #flightModePicker{border:1px solid #ffffff30;border-radius:6px;padding:0;margin:5px 0 10px;background:#152321}#flightModePicker>summary{padding:10px;list-style:none;color:#eff5f0;font-size:13px;cursor:pointer;display:flex;justify-content:space-between}#flightModePicker>summary::before{content:none}#flightModePicker>summary::after{content:"▾"}#flightModePicker[open]>summary::after{content:"▴"}#flightModeOptions{display:grid;padding:4px;gap:3px;border-top:1px solid #ffffff20}#flightModeOptions button{margin:0;text-align:left;width:100%;border:0;padding:8px}#flightModeOptions button[aria-pressed="true"]{background:#b5f67b;color:#172319}.destination{max-height:calc(100dvh - 80px);overflow-y:auto}
+
+/* Structured transparency cards */
+.copilot{background:#14211ff5;border-color:#b9d8cd26;box-shadow:0 10px 30px #06100d35}
+#satCards{display:grid;gap:10px;margin:16px 0 12px}
+#satCards:empty{display:none}
+#satCards .sat-card{--sat-accent:#b9e58d;border:1px solid #ffffff14;border-radius:10px;background:#ffffff04;padding:0;overflow:hidden}
+#satCards .sat-card[data-level="reason"]{--sat-accent:#92cbd9}
+#satCards .sat-card[data-level="projection"]{--sat-accent:#d3b6e8}
+#satCards .sat-card.focus{border-color:color-mix(in srgb,var(--sat-accent) 40%,transparent);box-shadow:inset 3px 0 var(--sat-accent)}
+#satCards summary{display:flex;align-items:center;gap:10px;padding:12px;position:relative;min-height:58px}
+#satCards summary::before{content:none}
+#satCards summary::after{content:'+';margin-left:auto;font-size:18px;color:#839a92;font-weight:400}
+#satCards details[open] summary::after{content:'−'}
+#satCards summary::-webkit-details-marker{display:none}
+.sat-level{display:grid;place-items:center;flex:0 0 30px;height:30px;background:#ffffff08;border:1px solid #ffffff12;border-radius:8px;color:var(--sat-accent);font-size:12px;font-weight:700;letter-spacing:1px}
+.sat-heading{display:grid;gap:3px}.sat-heading b{font-size:13px;color:#edf5f0;font-weight:600}.sat-heading small{font-size:10px;color:#91a69c;font-weight:400}
+#satCards .sat-row{margin:0 12px;padding:10px 0;border-top:1px solid #ffffff0c;font-size:12px;line-height:1.7;color:#d6e1da;overflow-wrap:anywhere}
+#satCards .sat-row strong{display:block;font-size:10px;font-weight:500;letter-spacing:.06em;color:#8fa69b;margin-bottom:4px}
+#satCards .sat-row:last-child{padding-bottom:13px}
+#satCards .sat-card[data-level="action"] .sat-row{display:grid;grid-template-columns:34px 1fr;gap:8px}
+#satCards .sat-card[data-level="action"] .sat-row strong{padding-top:2px;margin:0}
+#liveProgress{color:#c4eea2;font-variant-numeric:tabular-nums}
+.sat-progress-track{height:4px;background:#ffffff0a;margin:0 12px 13px;border-radius:9px;overflow:hidden}
+#satProgressFill{height:100%;background:#b5e588;border-radius:9px;transition:width .2s linear}
+.copilot #recSummary{color:#b9ccc0;line-height:1.75}.copilot #missionHint{border-top:1px solid #ffffff12;padding-top:10px;color:#8fa69b;line-height:1.65}
+
+@media(min-width:901px) and (min-height:650px){.copilot{top:96px;max-height:calc(100vh - 452px)}}
