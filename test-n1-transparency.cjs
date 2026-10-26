@@ -1,0 +1,17 @@
+const assert=require('node:assert/strict');
+const {describe}=require('./dist/n1-transparency.js');
+const input={state:{route:[[0,0],[100,0],[100,100]],progress:.25,speed:10,altitude:60,battery:80,status:'running',photoCheckpointIds:[]},mission:{battery:82,destination:{name:'B · 终点'}},position:{x:50,y:0},tasks:[{id:'photo',point:[100,0],shortName:'打卡点'}],ready:true,safety:{distance:40,warning:22,label:'建筑'}};
+const values=x=>Object.fromEntries(describe(x).sections.flatMap(s=>s[4].map(([id,,text])=>[id,text])));
+let v=values(input);assert.match(v.goal,/P1/);assert.match(v.eta,/50 m \/ 5 秒/);assert.match(v.battery,/79.9%/);assert.match(v.resources,/79.7%/);assert.match(v.performance,/0.0 m.*10.0 m\/s/);assert.match(v.progress,/0\/1/);assert.match(v.advice,/继续/);
+v=values({...input,state:{...input.state,progress:.75,battery:70},position:{x:100,y:50}});assert.match(v.goal,/P2/);assert.match(v.battery,/69.9%/);assert.match(v.eta,/50 m \/ 5 秒/);
+v=values({...input,state:{...input.state,status:'paused'}});assert.match(v.status,/暂停/);assert.match(v.performance,/0.0 m\/s/);assert.match(v.assumptions,/恢复飞行后/);
+v=values({...input,state:{...input.state,status:'manual',manualSpeed:3},position:{x:50,y:20}});assert.match(v.performance,/20.0 m/);assert.match(v.eta,/重新规划/);assert.match(v.advice,/先重新规划/);
+v=values({...input,state:{...input.state,status:'photo',activePhotoCheckpointId:'photo',progress:.5},position:{x:100,y:0}});assert.match(v.eta,/0 秒/);assert.match(v.advice,/拍照打卡/);assert.match(v.progress,/0\/1/);
+v=values({...input,state:{...input.state,photoCheckpointIds:['photo']}});assert.match(v.progress,/1\/1/);
+v=values({...input,errors:['航段 1 与三维碰撞体相交']});assert.match(v.reason,/需调整因素/);assert.match(v.checks,/碰撞体相交/);
+v=values({...input,safety:{distance:10,warning:22,label:'建筑'}});assert.match(v.advice,/需调整/);assert.match(v.clearance,/进入预警/);
+v=values({...input,state:{...input.state,battery:14}});assert.match(v.advice,/需调整/);
+v=values({...input,ready:false});assert.match(v.advice,/等待/);assert.match(v.checks,/尚未完成/);
+v=values({...input,state:{...input.state,status:'complete',progress:1},position:{x:100,y:100}});assert.match(v.eta,/无下一/);
+v=values({...input,draft:{route:[[50,0],[50,100],[100,100]],speed:5,altitude:70}});assert.match(v.advice,/应用后/);assert.match(v.eta,/100 m \/ 20 秒/);assert.match(v.assumptions,/待应用方案/);
+console.log('PASS N1 live waypoint/ETA/battery, progress, pause, manual deviation, photo confirmation, draft, constraints and arrival');
