@@ -85,3 +85,5 @@ body.free-flight-active #flightView canvas{cursor:grab;touch-action:none}body.fr
 .copilot #recSummary{color:#b9ccc0;line-height:1.75}.copilot #missionHint{border-top:1px solid #ffffff12;padding-top:10px;color:#8fa69b;line-height:1.65}
 
 @media(min-width:901px) and (min-height:650px){.copilot{top:96px;max-height:calc(100vh - 452px)}}
+
+#satCards .sat-card .sat-row:has([data-sat-value]){display:block}#satCards .sat-card .sat-row:has([data-sat-value]) strong{margin-bottom:4px;padding:0}
