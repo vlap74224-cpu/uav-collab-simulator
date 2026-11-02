@@ -85,20 +85,3 @@ body.free-flight-active #flightView canvas{cursor:grab;touch-action:none}body.fr
 .copilot #recSummary{color:#b9ccc0;line-height:1.75}.copilot #missionHint{border-top:1px solid #ffffff12;padding-top:10px;color:#8fa69b;line-height:1.65}
 
 @media(min-width:901px) and (min-height:650px){.copilot{top:96px;max-height:calc(100vh - 452px)}}
-
-/* Keep scene tools in the header and the decision panel focused on STA. */
-.camera-strip{justify-content:flex-start;gap:16px;align-items:center}
-#sceneLocation{display:block;order:-1;white-space:nowrap}
-#overviewNav{display:flex;align-items:center;flex-shrink:0}
-#overviewNav button{font-size:12px;padding:7px 10px;white-space:nowrap;background:#ffffff08}
-#satCards{margin-top:10px}
-#missionHint[role="status"]{color:#ffcd91}
-@media(max-width:760px){#overviewNav button{font-size:10px;padding:6px}.topbar{gap:8px}.mission-nav-trigger{padding:0 9px}.camera-strip{right:15px;flex-wrap:wrap;gap:8px}}
-
-/* N1: purpose/performance, reasoning/constraints, prediction/limits. */
-.n1-context{font-size:11px;color:#b6cbbd;padding:0 2px 2px;letter-spacing:.03em}
-#satCards.n1-sat .sat-card .sat-row{display:block}
-#satCards.n1-sat .sat-card .sat-row strong{display:block;margin-bottom:4px;padding:0;font-size:11px}
-#satCards.n1-sat .sat-card .sat-row:has(#n1-advice){background:#b5f67b08;margin:0;padding:10px 12px}
-#n1-advice,#n1-status{color:#c4eea2}
-#n1-performance,#n1-position{font-variant-numeric:tabular-nums}
