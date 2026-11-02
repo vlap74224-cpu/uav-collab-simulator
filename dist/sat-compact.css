@@ -20,21 +20,25 @@
 #photoCameraControls{position:fixed;left:18px;right:474px;bottom:20px;background:#14211ff5;padding:12px;z-index:40}
 #freeDestinationForm{flex-shrink:0}
 body.map-expanded .copilot.sat-compact{visibility:visible;pointer-events:auto;z-index:55}
-body.map-expanded .minimap{left:16px;right:476px;top:84px;bottom:204px;width:auto;height:auto;z-index:30}
-body.n4-active #trafficReadout{display:none!important}
+
+
 body.n4-active #originalRoute{stroke:#aab5b3;opacity:1;stroke-dasharray:8 8}
 body.n4-active #suggestedRoute{stroke:#ffd075;opacity:1}
-@media(min-width:950px){
- .direction-console{left:16px;right:auto;bottom:16px;width:246px;padding:10px}
- .direction-console .direction-instruments{height:100px}.direction-pad{width:96px;height:96px}.direction-console .direction-help,.direction-console .altitude-controls>small,.direction-console .altitude-controls>label,.direction-console .altitude-controls>span:first-child{display:none}
- .direction-console .altitude-controls{margin:0 0 5px;padding:0 0 5px}.direction-console .mini-instrument b{font-size:18px}
- .minimap{left:16px;top:104px;bottom:244px;width:calc(100vw - 492px);height:auto}.map-steering{left:280px;bottom:142px;width:calc(100vw - 756px);min-width:230px}
- footer{left:280px;right:480px;bottom:24px}.telemetry{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.telemetry strong{font-size:20px}.telemetry small{font-size:11px}.flight-controls{gap:5px;margin-top:10px}.flight-controls button{padding:7px;font-size:12px}.disclosure{display:none}.camera-tools{right:472px}.reticle{left:35%}
-}
-
 #editor{top:auto;bottom:16px;max-height:40dvh}
-body.sat-editing.map-expanded .minimap{top:84px;bottom:calc(40dvh + 30px)}
 
-body.free-flight-active #freeDestinationForm{position:fixed;left:16px;top:80px;width:calc(100vw - 492px);max-height:280px;overflow:auto;padding:12px;background:#14211ff5;border-radius:10px}body.free-flight-active .minimap{top:376px}
+
+body.free-flight-active #freeDestinationForm{position:fixed;left:16px;top:80px;width:calc(100vw - 492px);max-height:280px;overflow:auto;padding:12px;background:#14211ff5;border-radius:10px}
 
 #editor{display:flex;flex-direction:column;overflow:visible}#editor .editor-fields{overflow:auto;min-height:0;flex:1}#editor>.decision-buttons,#editor>#validation{flex-shrink:0}#editor>.decision-buttons{margin-bottom:0}#editor button{min-height:38px}
+
+/* Keep the original cockpit layout; only the assistant's interior changes. */
+.copilot.sat-compact{top:96px;right:24px;width:302px;height:calc(100dvh - 452px);max-height:none;padding:8px}
+.sat-compact .section-head{height:24px;min-height:24px;margin-bottom:4px;font-size:15px}
+.sat-compact .sat-section{padding:6px;border-left-width:3px}
+.sat-compact .sat-section h2{font-size:14px;line-height:20px;margin-bottom:2px}
+.sat-compact .sat-line{font-size:14px;line-height:20px;gap:5px}
+.sat-compact .sat-label{flex-basis:30px}
+.sat-compact .sat-compare{gap:6px;line-height:20px;margin:0}
+.sat-compare>div{flex-direction:row;align-items:baseline;gap:3px;flex-wrap:wrap}.sat-compare b{font-size:14px}
+.sat-compact #decisionPanel{padding-top:6px}.sat-compact .decision-buttons{gap:4px}.sat-compact .decision-buttons>button{padding:6px 3px;min-height:40px}
+@media(max-height:850px) and (min-width:950px){.copilot.sat-compact{top:60px;height:410px}}

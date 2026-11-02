@@ -8,9 +8,9 @@ function describe({state:s,mission:m,draft:d,position:p,ready,errors=[],comparis
  if(m.id==='N4'){
  q=q||{};const risk=q.original,reason=!risk?'原方案暂不可预测':risk.conflict?'原方案预测间隔低于阈值':'原方案预测间隔满足阈值';
  const action=s.collisionExperiment?'保持原线（碰撞实验）':q.waiting||q.suggestedLabel==='让行方案'?'悬停让行':!s.conflictAlert?'沿原线监测':!q.suggested||q.suggested.conflict?'建议等待让行':'建议绕行避让';
- a=[['当前', '间隔 '+fmt(q.current)+(Number.isFinite(q.current)?' m':'')+' · 目标 '+fmt(q.targetSpeed)+(Number.isFinite(q.targetSpeed)?' m/s':'')],['推荐',action],['航迹',d?'黄色修改线，应用后执行':s.conflictAlert?'灰色原线 / 黄色候选线（见地图）':'黄色当前计划；尚无避让候选']];
- b=[['判断',reason],['阈值','交通间隔 ≥40 m（模拟阈值）'],['选择',!ready?'等待三维检查':errors.length?'当前约束未通过，调整或让行':action.includes('让行')?'绕行条件不足，等待目标通过':'结合建筑碰撞与交通间隔选择方案']];
- c=[['方案对比',{original:fmt(q.original?.distance)+(q.original?' m':''),suggested:fmt(q.suggested?.distance)+(q.suggested?' m':''),label:q.suggestedLabel||'建议方案'}],['接近时刻','原 '+(q.original?fmt(q.original.seconds)+' s':'暂不可预测')+' / 建议 '+(q.suggested?fmt(q.suggested.seconds)+' s':'暂不可预测')],['条件','恢复后按计划速度；目标匀速，预测 ≤30 s']];
+ a=[['当前', '间隔 '+fmt(q.current)+(Number.isFinite(q.current)?' m':'')+' · 目标 '+fmt(q.targetSpeed)+(Number.isFinite(q.targetSpeed)?' m/s':'')],['推荐',action],['航迹',d?'黄色修改线，应用后执行':s.conflictAlert?'灰：原线 / 黄：候选':'黄色当前航迹']];
+ b=[['判断',reason],['阈值','≥40 m（模拟阈值）'],['选择',!ready?'等待三维检查':errors.length?'当前约束未通过，调整或让行':action.includes('让行')?'绕行条件不足，等待目标通过':'结合建筑净空与交通间隔']];
+ c=[['方案对比',{original:fmt(q.original?.distance)+(q.original?' m':''),suggested:fmt(q.suggested?.distance)+(q.suggested?' m':''),label:q.suggestedLabel||'建议方案'}],['时刻','原 '+(q.original?fmt(q.original.seconds)+' s':'暂不可预测')+' / 建议 '+(q.suggested?fmt(q.suggested.seconds)+' s':'暂不可预测')],['前提','计划恢复；目标匀速，≤30s']];
  }else if(m.id==='N2'||m.id==='N3'){
  const z=(s.noFlyVisible||s.noFlyDetected||m.id==='N3')?m.hazard:null;
  a=[['目标',target],['推荐',z?'绕开限制区后接回航迹':'沿当前航迹巡航'],['航迹',z?'灰色原线 / 黄色候选线':'当前未发现临时禁飞区']];
@@ -26,7 +26,7 @@ function describe({state:s,mission:m,draft:d,position:p,ready,errors=[],comparis
  b=[['依据',n?'保留必经打卡点及巡检顺序':'按当前位置与目的地规划'],['检查',checked],['方案',plan+'；无新增改线条件时保持']];
  c=[['抵达',s.status==='manual'?'暂不可预测':eta+' · 电量约 '+fmt(energy)+'%'],['范围','仅当前剩余航迹，不含拍照等待'],['条件','恒速巡航估计，未计真实风场和电池老化']];
  }
- return [['action','L1 当前信息与行动',a],['reason','L2 理由与约束',b],['projection','L3 预测与局限',c]];
+ return [['action','L1 当前信息与行动',a],['reason','L2 理由与约束',b],['projection',m.id==='N4'?'L3 最小间隔预测与局限':'L3 预测与局限',c]];
 }
 const api={describe};if(typeof module!=='undefined')module.exports=api;else root.SatInformation=api;
 })(typeof window!=='undefined'?window:globalThis);
