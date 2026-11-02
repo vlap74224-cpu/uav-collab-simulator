@@ -1,0 +1,40 @@
+/* Shared AOI and typography for every transparency condition. */
+.copilot.sat-compact{top:76px;right:16px;width:440px;height:552px;max-height:calc(100dvh - 92px);min-height:0;padding:12px;overflow:visible;background:#14211ff5;display:flex;flex-direction:column;border-radius:10px}
+.sat-compact .section-head{height:28px;min-height:28px;margin:0 0 8px;font-size:16px;gap:8px}
+#satState{font-size:14px;color:#c4dbbf;margin-left:auto;white-space:nowrap}
+.sat-compact #toggleAI,.sat-compact #eventBanner,.sat-compact #recTitle,.sat-compact #recSummary,.sat-compact #missionHint{display:none!important}
+.sat-compact #aiBody{display:flex!important;flex:1;min-height:0;flex-direction:column;gap:0}
+.sat-compact #satCards{display:flex;flex-direction:column;gap:0;margin:0;flex:1;min-height:0}
+.sat-compact .sat-section{padding:10px 10px;border-top:1px solid #ffffff24;border-left:3px solid transparent;flex:1;min-height:0;background:transparent;box-shadow:none}
+.sat-compact .sat-section.focus{border-left-color:#b5ed98;background:#b5ed9809}
+.sat-compact .sat-section h2{margin:0 0 5px;font-size:15px;line-height:22px;font-weight:600;color:#e6eee8}
+.sat-compact .sat-line{display:flex;gap:8px;font-size:14px;line-height:22px;margin:0;min-width:0;color:#e1e8e2;overflow-wrap:anywhere}
+.sat-compact .sat-label{flex:0 0 56px;color:#a6bbb0}
+.sat-compact .sat-compare{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:10px;margin-bottom:3px;font-size:14px;line-height:22px}
+.sat-compare>div{display:flex;flex-direction:column}.sat-compare b{font-size:16px;font-weight:600;color:#e6f3d9}.sat-compare span{color:#a6bbb0}
+.sat-compact #decisionPanel{position:static;margin:0;border-top:1px solid #ffffff24;background:transparent;flex-shrink:0;padding-top:8px}
+.sat-compact .decision-buttons{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.sat-compact .decision-buttons>button{min-height:42px;font-size:14px;padding:8px 6px;flex:1 1 27%}
+.sat-compact #waitTraffic{flex-basis:32%}.sat-compact #collisionTrial{flex-basis:55%}
+#editor{position:fixed;left:18px;right:474px;top:84px;max-height:calc(100dvh - 102px);overflow:auto;background:#14211ff7;border:1px solid #b5ed9844;border-radius:10px;padding:14px;z-index:55;font-size:14px}
+#photoCameraControls{position:fixed;left:18px;right:474px;bottom:20px;background:#14211ff5;padding:12px;z-index:40}
+#freeDestinationForm{flex-shrink:0}
+body.map-expanded .copilot.sat-compact{visibility:visible;pointer-events:auto;z-index:55}
+body.map-expanded .minimap{left:16px;right:476px;top:84px;bottom:204px;width:auto;height:auto;z-index:30}
+body.n4-active #trafficReadout{display:none!important}
+body.n4-active #originalRoute{stroke:#aab5b3;opacity:1;stroke-dasharray:8 8}
+body.n4-active #suggestedRoute{stroke:#ffd075;opacity:1}
+@media(min-width:950px){
+ .direction-console{left:16px;right:auto;bottom:16px;width:246px;padding:10px}
+ .direction-console .direction-instruments{height:100px}.direction-pad{width:96px;height:96px}.direction-console .direction-help,.direction-console .altitude-controls>small,.direction-console .altitude-controls>label,.direction-console .altitude-controls>span:first-child{display:none}
+ .direction-console .altitude-controls{margin:0 0 5px;padding:0 0 5px}.direction-console .mini-instrument b{font-size:18px}
+ .minimap{left:16px;top:104px;bottom:244px;width:calc(100vw - 492px);height:auto}.map-steering{left:280px;bottom:142px;width:calc(100vw - 756px);min-width:230px}
+ footer{left:280px;right:480px;bottom:24px}.telemetry{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.telemetry strong{font-size:20px}.telemetry small{font-size:11px}.flight-controls{gap:5px;margin-top:10px}.flight-controls button{padding:7px;font-size:12px}.disclosure{display:none}.camera-tools{right:472px}.reticle{left:35%}
+}
+
+#editor{top:auto;bottom:16px;max-height:40dvh}
+body.sat-editing.map-expanded .minimap{top:84px;bottom:calc(40dvh + 30px)}
+
+body.free-flight-active #freeDestinationForm{position:fixed;left:16px;top:80px;width:calc(100vw - 492px);max-height:280px;overflow:auto;padding:12px;background:#14211ff5;border-radius:10px}body.free-flight-active .minimap{top:376px}
+
+#editor{display:flex;flex-direction:column;overflow:visible}#editor .editor-fields{overflow:auto;min-height:0;flex:1}#editor>.decision-buttons,#editor>#validation{flex-shrink:0}#editor>.decision-buttons{margin-bottom:0}#editor button{min-height:38px}
