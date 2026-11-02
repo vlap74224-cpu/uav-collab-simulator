@@ -1,32 +1,41 @@
 (function(root){
 'use strict';
 const C=typeof module!=='undefined'?require('./core.js'):root.UAV;
-function describe({state:s,mission:m,draft:d,position:p,ready,errors=[],comparison:q}){
- const route=d?.route||s.route,v=d?.speed??s.speed,left=C.length(route)*(d?1:1-s.progress),secs=v>0?left/v:null,battery=s.battery??m.battery,energy=battery-left*.0016-(secs||0)*.001,fmt=n=>Number.isFinite(n)?n.toFixed(1):'暂不可预测',eta=secs===null?'暂不可预测':Math.ceil(secs)+' 秒',target=s.goalDeferred||d?.goalDeferred?'A 点返航':m.destination.name.replace(/.*· */,'');
- const checked=!ready?'等待场景检查':errors.length?'约束未通过，请修改航线':'当前航线约束检查通过',plan=d?'待应用修改航迹':s.modified?'修改航迹':'建议航迹';
- let a,b,c;
- if(m.id==='N4'){
- q=q||{};const risk=q.original,reason=!risk?'原方案暂不可预测':risk.conflict?'原方案预测间隔低于阈值':'原方案预测间隔满足阈值';
- const action=s.collisionExperiment?'保持原线（碰撞实验）':q.waiting||q.suggestedLabel==='让行方案'?'悬停让行':!s.conflictAlert?'沿原线监测':!q.suggested||q.suggested.conflict?'建议等待让行':'建议绕行避让';
- a=[['当前', '间隔 '+fmt(q.current)+(Number.isFinite(q.current)?' m':'')+' · 目标 '+fmt(q.targetSpeed)+(Number.isFinite(q.targetSpeed)?' m/s':'')],['推荐',action],['航迹',d?'黄色修改线，应用后执行':s.conflictAlert?'灰：原线 / 黄：候选':'黄色当前航迹']];
- b=[['判断',reason],['阈值','≥40 m（模拟阈值）'],['选择',!ready?'等待三维检查':errors.length?'当前约束未通过，调整或让行':action.includes('让行')?'绕行条件不足，等待目标通过':'结合建筑净空与交通间隔']];
- c=[['方案对比',{original:fmt(q.original?.distance)+(q.original?' m':''),suggested:fmt(q.suggested?.distance)+(q.suggested?' m':''),label:q.suggestedLabel||'建议方案'}],['时刻','原 '+(q.original?fmt(q.original.seconds)+' s':'暂不可预测')+' / 建议 '+(q.suggested?fmt(q.suggested.seconds)+' s':'暂不可预测')],['前提','计划恢复；目标匀速，≤30s']];
+const fmt=n=>Number.isFinite(n)?n.toFixed(1):'未估计',sec=n=>Number.isFinite(n)?Math.ceil(n)+'s':'未估计';
+function interval(p){return !p||p.geometry.status==='pending'?'净距采样中':p.geometry.status!=='done'?'净距尚未提供':fmt(Math.floor(p.geometry.min*10)/10)+'m / ≥'+fmt(p.threshold)+'m（采样）';}
+function feasible(p){return p?.feasible===true;}
+function choice(A,B){if(!A||!B||A.feasible===null||B.feasible===null)return '候选A/B仍在检查';if(feasible(A)&&!feasible(B))return B.geometry.collision?'B与实体相交，A满足要求':B.zone.intersects?'B进入限制区，A满足要求':'B余量或净距不足，A满足';if(!feasible(A))return 'A未满足约束，需改线';const delta=B.seconds-A.seconds;return Math.abs(delta)<.1?'A/B均可行，耗时相同':delta>0?'A/B均可行，A少'+fmt(delta)+'s':'A/B均可行，B少'+fmt(-delta)+'s';}
+function trafficAction({state:s,evidence:e,comparison:q}){if(!s.conflictAlert)return 'route';if(e?.A.feasible&&q?.suggested&&!q.suggested.conflict)return 'route';if(e?.C?.feasible&&q?.waitingPlan&&!q.waitingPlan.conflict)return 'wait';return 'none';}
+function describe({state:s,mission:m,draft:d,position:p,ready,errors=[],comparison:q,evidence:e,landingForecast}){
+ const route=d?.route||s.route,v=d?.speed??s.speed,alt=d?.altitude??s.altitude,battery=s.battery??m.battery,manual=s.status==='manual',pending=!ready||!e,target=e?'P'+e.next+' · '+e.nextName:m.destination.name,finalName=m.destination.name.replace(/.*· */,''),plan=d?'修改方案A':'方案A';let a,b,c;
+ if(m.id==='N1'||m.id==='FREE'){
+ const leg=e?.leg,n=e?.nextForecast,zone=leg?.zone,dev=C.nearestPointOnRoute(route,[p.x,p.y])?.distance,tracking=Number.isFinite(dev)?dev<=(m.trackingTolerance??5)?'正常跟踪':'偏离（>'+ (m.trackingTolerance??5)+'m）':'未定位',covered=e?'P'+(e.next-1)+'–P'+e.next:'当前航段';
+ a=[['目标',target],['建议',s.status==='photo'?'先拍照确认，再继续':s.status==='complete'?'当前航段已完成':manual?'手动接管；需重规划':feasible(leg)&&!errors.length?'保持航迹A，前往P'+e.next:'完成检查后再决定'],['执行',fmt(dev)+'m · '+(manual?'手动控制':tracking)]];
+ b=[['检查',covered+'：'+(!zone?'待检查':!e.zone?'无已知禁区':zone.intersects?'与禁区相交':'未与禁区相交')],['间隔',interval(leg)],['依据',pending?'模型未就绪':errors.length?(errors.some(x=>x.includes('拍照')||x.includes('打卡'))?'未覆盖全部必经打卡点':errors[0]):leg?.feasible===null?'该段净距计算中':feasible(leg)?covered+'满足通行约束':covered+'有约束未满足']];
+ c=[['抵达',manual?'暂不可预测':sec(n?.seconds)+'后至P'+(e?.next||'?')],['余电',manual?'暂不可预测':fmt(n?.endBattery)+'%'],['条件',v+'m/s · 无风估计；至P'+(e?.next||'?')]];
  }else if(m.id==='N2'||m.id==='N3'){
- const z=(s.noFlyVisible||s.noFlyDetected||m.id==='N3')?m.hazard:null;
- a=[['目标',target],['推荐',z?'绕开限制区后接回航迹':'沿当前航迹巡航'],['航迹',z?'灰色原线 / 黄色候选线':'当前未发现临时禁飞区']];
- b=[['原因',z?'前方限制区影响原航线':'持续监测前方空域'],['间隔',z?'限制区外保留 '+(z.margin||0)+' m 缓冲':'建筑碰撞约束检查'],['检查',checked]];
- c=[['绕行',z?eta+' · 抵达约 '+fmt(energy)+'%':'发现限制区后预测'],['净距','完整航段最小净距暂不可预测'],['条件','未计定位误差、风场；实际需保留余量']];
+ const z=e?.zone,A=e?.A,B=e?.B,O=e?.original,affected=O?.zone.segments||[],diff=A&&O?A.distance-O.distance:null,buildingBlocked=O?.geometry.status==='done'&&(O.geometry.collision||O.geometry.min<O.threshold),obstacle=z?(z.label||'半径'+fmt(z.r)+'m限制区'):(buildingBlocked?'建筑缓冲区':null);
+ a=[['目标',(obstacle?'绕过'+obstacle+'，':'')+'至'+finalName],['建议',manual?'手动接管，需重规划':feasible(A)?(obstacle?'采用'+(A.side||'')+'绕行A':'沿当前航迹A巡航'):A?.feasible===null?'待候选净距检查':'修改A或选择备选'],['路线',z?'当前→'+Math.max(0,route.length-2)+'调整点→终点（黄线）':'黄线'+(route.length-1)+'段（原计划）']];
+ b=[['原路',!z?(buildingBlocked?'原段'+(O.geometry.collisionSegment||O.geometry.minSegment)+'进入建筑缓冲':'P0–P'+((O?.route.length||2)-1)+'未交已知禁区'):affected.length?'原段'+affected.join('、')+'与禁区缓冲相交':'原路未交禁区，复核绕行必要性'],['间隔',interval(A)],['取舍',obstacle||JSON.stringify(A?.route)!==JSON.stringify(O?.route)?choice(A,B):'原路与A同线，无绕行增量']];
+ c=[['代价',!Number.isFinite(diff)?'原计划数据不足':(diff>=0?'增加':'减少')+fmt(Math.abs(diff))+'m / '+fmt(Math.abs(diff)/v)+'s'],['余电',manual?'暂不可预测':fmt(e?.remaining.endBattery)+'%（至'+finalName+'）'],['条件','实体模型full1；未估计定位误差']];
+ }else if(m.id==='N4'){
+ q=q||{};const A=e?.A,B=e?.B,original=q.original,decision=trafficAction({state:s,evidence:e,comparison:q}),activeWait=q.waiting||q.suggestedLabel==='让行方案'||decision==='wait',risk=activeWait?q.waitingPlan:q.suggested,altRisk=q.alternative,resultLabel=activeWait?'等待C':q.suggestedLabel||'建议方案';
+ const Aok=feasible(A)&&risk&&!risk.conflict,Bok=feasible(B)&&altRisk&&!altRisk.conflict;
+ let trade=!ready?'模型未就绪':A?.feasible===null?'A净距仍在检查':!Aok?'A未同时满足建筑与交通约束':!Bok?'A可行；B未满足联合约束':choice(A,B);
+ if(activeWait)trade=risk&&!risk.conflict?'A受净距约束；C在30s窗内≥40m':'等待方案也需复核交通间隔';
+ a=[['目标','避让T1，继续至'+finalName],['当前',fmt(q.current)+'m / T1 '+fmt(q.targetSpeed)+'m/s'],['建议',manual?'手动接管，需重规划':s.collisionExperiment?'保持原线（碰撞实验）':activeWait?'执行等待方案C':!s.conflictAlert?'保持A，未触发冲突':Aok?'执行当前'+plan:pending||A?.feasible===null?'候选A计算中':'调整A或检查等待C']];
+ b=[['冲突',!original?'原方案暂不可预测':fmt(original.distance)+'m '+(original.distance<40?'<':'≥')+' 40m（原案）'],['限制',!e?'检查中':A?.geometry.collision?'A与'+A.geometry.collision+'相交':A?.zone.intersects?'A进入已知禁区':A?.geometry.status==='done'?'A建筑采样'+fmt(Math.floor(A.geometry.min*10)/10)+'m / ≥'+fmt(A.threshold)+'m':'A建筑净距计算中'],['取舍',trade]];
+ c=[['方案对比',{original:original?fmt(original.distance)+'m':'暂不可预测',suggested:risk?fmt(risk.distance)+'m':'暂不可预测',label:resultLabel}],['时刻',risk?resultLabel+' '+fmt(risk.seconds)+'s后最近':'建议方案暂不可预测'],['条件','未来30s；T1保持当前速度方向']];
  }else if(m.id==='N5'){
- a=[['目标',target+(s.goalDeferred?' · 原任务暂缓':' · 到点着陆')],['推荐',energy>=15?'继续至可行终点':'调整任务或检查返航'],['任务',s.goalDeferred?'返回 A 点后下降':'保留当前终点任务']];
- b=[['原因','实验注入电量下降，需复核资源余量'],['门槛','预计终点电量 ≥15%'],['优先','安全着陆优先；'+checked]];
- c=[['抵达',eta+' · 电量约 '+fmt(energy)+'%'],['返航','需规划检查，暂不可预测'],['条件','巡航估计；未计风场及下降耗电']];
- }else{
- const done=(s.photoCheckpointIds||[]).length,n=m.photoCheckpoints?.length||0;
- a=[['目标',target],['推荐',s.status==='photo'?'完成拍照打卡后续飞':d?'复核修改后应用':s.status==='manual'?'手动接管后需重规划':'继续当前航迹'],['进度',Math.round(s.progress*100)+'%'+(n?' · 打卡 '+done+'/'+n:'')+' · 偏差 '+fmt(C.nearestPointOnRoute(route,[p.x,p.y])?.distance)+' m']];
- b=[['依据',n?'保留必经打卡点及巡检顺序':'按当前位置与目的地规划'],['检查',checked],['方案',plan+'；无新增改线条件时保持']];
- c=[['抵达',s.status==='manual'?'暂不可预测':eta+' · 电量约 '+fmt(energy)+'%'],['范围','仅当前剩余航迹，不含拍照等待'],['条件','恒速巡航估计，未计真实风场和电池老化']];
- }
- return [['action','L1 当前信息与行动',a],['reason','L2 理由与约束',b],['projection',m.id==='N4'?'L3 最小间隔预测与局限':'L3 预测与局限',c]];
+ if((s.landing||s.landed)&&!m.resourceTasks){return [['action','L1 当前信息与行动',[['目标',m.destination.name],['当前',s.landed?'旧版任务已着陆':'旧版任务下降中'],['建议','新任务入口可加载新版N5']]],['reason','L2 理由与约束',[['检查','保留旧版任务实际记录'],['优先','旧版未定义必需/可选点'],['取舍','不追认旧版任务为P4/P5任务']]],['projection','L3 预测与局限',[['余电','实际仿真电量'+fmt(battery)+'%'],['完成',s.landed?'旧版任务已结束':'当前任务记录保留'],['条件','新版任务需重新选择N5加载']]]];}if(s.landing||s.landed){const done=s.resourceCompleted||[],remaining=landingForecast?.seconds,left=battery-(landingForecast?.cost||0);return [['action','L1 当前信息与行动',[['目标','A 点返航着陆'],['当前',s.landed?'已着陆；'+done.length+'/2点完成':'已到A，距落地'+fmt(Math.max(0,s.altitude-(s.landing?.targetAltitude??m.landingTargetAltitude)))+'m'],['建议',s.landed?'本次任务已结束':'保持水平位置，继续下降']]],['reason','L2 理由与约束',[['检查',s.landed?'着陆完成信号已触发':'A点降落面与下降通道已检查'],['优先','P4必需 / P5可选'],['取舍',done.includes('P4')?(done.includes('P5')?'P4/P5均实际完成':'P4实际完成；P5未执行'):'必需点尚未完成']]],['projection','L3 预测与局限',[['余电',s.landed?'实际仿真电量'+fmt(battery)+'%':'预计落地'+fmt(left)+'%'],['完成',s.landed?'实际完成'+done.length+'/2点':sec(remaining)+'后着陆'],['条件',s.landed?'仿真读数；无误差范围模型':'按当前下降模型；无误差范围']]]];}
+
+ if(m.resourcePrepared===false){return [['action','L1 当前信息与行动',[['目标','完成必需P4，返回A'],['当前',fmt(battery)+'% · 待资源核算'],['建议',m.resourcePlanError||'正在规划P4/P5与返航']]],['reason','L2 理由与约束',[['原案','P4→P5→A，待路径检查'],['优先','P4必需 / P5可选'],['取舍','待候选路线与余电核算']]],['projection','L3 预测与局限',[['余电','尚未提供估计'],['完成','必需及可选路线规划中'],['条件','尚未计算，不生成余电范围']]]];}
+ const O=m.resourceEnergy?{...e?.original,endBattery:m.resourceEnergy.original,seconds:Number.isFinite(m.resourceEnergy.originalSeconds)&&Number.isFinite(m.resourceDecisionTime)?m.resourceEnergy.originalSeconds-(s.simTime-m.resourceDecisionTime):null}:e?.original,A=e?.A,finish=x=>Number.isFinite(x?.seconds)?s.simTime+x.seconds:null,home=m.destination.id==='home'||s.goalDeferred||d?.goalDeferred,kind=home?'返航':'着陆',deadline=Number.isFinite(m.deadlineSeconds)?m.deadlineSeconds:null,priorities=m.taskPriorities,tasks=m.resourceTasks||[],done=s.resourceCompleted||[],kept=tasks.filter(t=>done.includes(t.id)||(C.nearestPointOnRoute(route,t.point)?.distance??Infinity)<=2),pendingRequired=tasks.filter(t=>t.priority==='必需'&&!done.includes(t.id));
+ a=[['目标',tasks.length?(pendingRequired.length?'完成P4并安全返航A':'返回A并安全着陆'):(home?'返回A':'至'+finalName)+'，安全着陆'],['当前',deadline===null?fmt(battery)+'% / 剩余'+(tasks.length?kept.filter(t=>!done.includes(t.id)).length:s.progress>=1?0:1)+'点':Math.max(0,deadline-s.simTime).toFixed(0)+'s至截止'],['建议',manual?'手动接管，需重规划':s.resourcePlanning?'正在规划P4/P5与返航':m.resourcePlanError?m.resourcePlanError:pending||A?.feasible===null?'等待资源与路径核算':!errors.length&&feasible(A)&&(deadline===null||finish(A)!==null&&finish(A)<=deadline)?(tasks.length?(kept.some(t=>t.id==='P5')?'完成P4/P5后返航':'取消P5，完成P4后返航'):(home?'采用返航A':'保留当前终点任务')):'当前A不可行，修改路线']];
+ b=[['缺口',deadline===null?(tasks.length?'原快照':'原案终点')+fmt(O?.endBattery)+'% '+(O?.endBattery>=15?'≥':'<')+'15%':O?.seconds===null?'原案时刻未估计':'原案'+fmt(finish(O))+'s / 截止'+deadline+'s'],['优先',priorities?Object.entries(priorities).map(([k,v])=>k+':'+v).join(' / '):'未配置必需/可选任务优先级'],['取舍',A?.feasible===null?'路径与资源检查中':!errors.length&&feasible(A)&&(deadline===null||finish(A)!==null&&finish(A)<=deadline)?(deadline===null?tasks.length?'保留必需点；返航余量≥15%':'A路径及15%余量均满足':'A路径及截止时刻均满足'):'A有约束未满足，不判定可行']];
+ c=[['余量',manual?'当前A暂不可预测':deadline===null?(tasks.length?'原快照':'原终点')+fmt(O?.endBattery)+'%→A '+fmt(A?.endBattery)+'%':'完成 原'+fmt(finish(O))+'s→A '+fmt(finish(A))+'s'],['完成',(tasks.length?kept.length+'/'+tasks.length+'点':home?'返航A':'完成当前终点')+' / '+sec(e?.remaining.seconds)+(home?'后返航':'')],['条件',deadline===null?v+'m/s无风含下降；范围未建模':'按计划速度；不含等待和下降时间']];
+ }else{a=[['目标',finalName],['建议','复核当前方案'],['执行',s.status]];b=[['检查','未配置该节点专用约束'],['间隔','尚未提供估计'],['依据','需先配置任务']];c=[['抵达','尚未提供估计'],['余电','尚未提供估计'],['条件','未配置预测模型']];}
+ return [['action','L1 当前信息与行动',a],['reason','L2 理由与约束',b],['projection',m.id==='N4'?'L3 最小间隔预测及局限':'L3 预测与局限',c]];
 }
-const api={describe};if(typeof module!=='undefined')module.exports=api;else root.SatInformation=api;
+const api={describe,choice,trafficAction};if(typeof module!=='undefined')module.exports=api;else root.SatInformation=api;
 })(typeof window!=='undefined'?window:globalThis);
