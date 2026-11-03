@@ -68,3 +68,5 @@ body.sat-editing #editor .editor-fields{padding-right:2px}
 body.sat-editing #editor>.decision-buttons{margin-top:8px}
 @media(max-width:950px){body.sat-editing .minimap{left:10px;right:332px;top:62px;bottom:12px}body.sat-editing #editor{right:10px;top:62px;bottom:12px;width:310px}}
 @media(max-width:600px){body.sat-editing .minimap{left:10px;right:10px;top:60px;bottom:48dvh}body.sat-editing #editor{left:10px;right:10px;top:auto;bottom:10px;width:auto;height:calc(48dvh - 18px)}}
+
+#originalRoute.resource-reference{stroke:#9ba6a5;opacity:1;stroke-dasharray:8 8}

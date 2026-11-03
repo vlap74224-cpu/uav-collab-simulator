@@ -21,7 +21,7 @@ for(const rate of [1,4,8]){
  for(let i=0;i<5000&&ctx.state.status!=='complete';i++)ctx.tick(time+=1000/60);
  assert.equal(ctx.state.status,'complete');assert.equal(ctx.state.landed,true);assert.equal(ctx.state.altitude,plan.targetAltitude);assert.equal(ctx.state.verticalSpeed,0);assert.deepEqual([ctx.currentPosition().x,ctx.currentPosition().y],endpoint);assert.equal(events.filter(t=>t==='complete').length,1);assert(!events.includes('collision'),'touchdown must not become a crash');
 }
-const endpoint=start(4,true);assert.deepEqual(endpoint,Sequence.points[0].point);assert.deepEqual(Array.from(ctx.state.landing.point),endpoint,'return route lands at home');
+const endpoint=start(4,true);assert.deepEqual(endpoint,Sequence.points[4].point);assert.deepEqual(Array.from(ctx.state.landing.point),endpoint,'N5 alternative also lands at E');
 assert(Math.abs(FlightControls.landing(60,1.58,.1).verticalSpeed)>Math.abs(FlightControls.landing(2,1.58,.1).verticalSpeed),'slow down close to the ground');
 assert.equal(FlightControls.landing(2,1.58,20).altitude,1.58,'large timesteps cannot pass below touchdown');
 start();ctx.state.landing=null;ctx.window.worldLandingSurface=()=>({altitude:10,normalY:1,label:'树冠'});assert.equal(ctx.beginLanding(),false);assert.equal(ctx.state.status,'paused','unsafe surface must hold rather than descend');assert.equal(ctx.state.altitude,60);
