@@ -42,3 +42,9 @@ body.free-flight-active #freeDestinationForm{position:fixed;left:16px;top:80px;w
 .sat-compare>div{flex-direction:row;align-items:baseline;gap:3px;flex-wrap:wrap}.sat-compare b{font-size:14px}
 .sat-compact #decisionPanel{padding-top:6px}.sat-compact .decision-buttons{gap:4px}.sat-compact .decision-buttons>button{padding:6px 3px;min-height:40px}
 @media(max-height:850px) and (min-width:950px){.copilot.sat-compact{top:60px;height:410px}}
+/* The same right-hand AOI in all conditions; room for nine rows and traffic actions. */
+.copilot.sat-compact{width:354px}
+.sat-compact .sat-section{padding:4px 6px}
+.sat-compact #waitTraffic,.sat-compact #collisionTrial{min-height:30px;padding:3px}
+@media(max-height:850px) and (min-width:950px){.copilot.sat-compact{top:60px;height:420px}}
+@keyframes event-notice{50%{opacity:.4}}.event-highlight{animation:event-notice .8s 5}
