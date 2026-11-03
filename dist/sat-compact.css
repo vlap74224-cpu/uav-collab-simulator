@@ -83,3 +83,5 @@ body.free-map-workspace :is(.direction-console,.map-steering,footer,.reticle,.ca
 body.free-map-workspace .map-heading button{visibility:hidden;pointer-events:none}
 @media(max-width:950px){body.free-map-workspace .minimap{left:10px;right:332px;top:62px;bottom:12px}#freeMapWorkspacePanel{right:10px;top:62px;bottom:12px;width:310px}}
 @media(max-width:600px){body.free-map-workspace .minimap{left:10px;right:10px;top:60px;bottom:48dvh}#freeMapWorkspacePanel{left:10px;right:10px;top:auto;bottom:10px;width:auto;height:calc(48dvh - 18px);overflow:auto}}
+
+.free-destination-handle{display:grid!important;place-items:center;cursor:grab;touch-action:none;background:transparent;border:0}.free-destination-handle:active{cursor:grabbing}.free-destination-handle span{display:block;width:24px;height:24px;border:3px solid #b9c2c8;border-radius:50%;background:#7f8c9466;box-shadow:0 1px 5px #0008;pointer-events:none}.free-destination-handle:focus-visible{outline:2px solid #b5ed98;outline-offset:1px;border-radius:50%}
