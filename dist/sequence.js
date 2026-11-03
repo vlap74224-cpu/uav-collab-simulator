@@ -42,7 +42,7 @@ function make(index,origin,battery){
   m.route=[a,[-12,603],[-100,740],[-100,680],[-100,620],[-119,548],[-99,421],[-30,260],[120,390],[170,420],[200,420],b];
   m.initialRoute=C.clone(m.route);
   m.alternative=C.clone(m.route);
-  const photo=(id,name,shortName,routeIndex,target,targetName,targetAltitude=120)=>({id,name,shortName,point:m.route[routeIndex].slice(),target:target.slice(),targetName,targetAltitude,routeIndex,progress:C.length(m.route.slice(0,routeIndex+1))/C.length(m.route)});
+  const photo=(id,name,shortName,routeIndex,target,targetName,targetAltitude=120)=>({id,name,shortName,point:m.route[routeIndex].slice(),target:target.slice(),targetName,targetAltitude,flowLabel:shortName.replace(/打卡$/,''),photoRequirement:targetName==='东方明珠'?'拍摄东方明珠全景，人工确认构图':'拍摄'+targetName+'，人工确认构图',routeIndex,progress:C.length(m.route.slice(0,routeIndex+1))/C.length(m.route)});
   m.photoCheckpoints=[
    photo('N1-PHOTO-1','震旦大厦拍照打卡','震旦大厦打卡',2,landmarks[1].point,'震旦大厦',110),
    photo('N1-PHOTO-2','未来资产大厦拍照打卡','未来资产打卡',3,landmarks[2].point,'未来资产大厦',115),
