@@ -17,7 +17,7 @@
 .sat-compact .decision-buttons>button{min-height:42px;font-size:14px;padding:8px 6px;flex:1 1 27%}
 .sat-compact #waitTraffic{flex-basis:32%}.sat-compact #collisionTrial{flex-basis:55%}
 #editor{position:fixed;left:18px;right:474px;top:84px;max-height:calc(100dvh - 102px);overflow:auto;background:#14211ff7;border:1px solid #b5ed9844;border-radius:10px;padding:14px;z-index:55;font-size:14px}
-#photoCameraControls{position:fixed;left:18px;right:474px;bottom:20px;background:#14211ff5;padding:12px;z-index:40}
+#photoCameraControls{position:fixed;left:368px;right:472px;bottom:188px;background:#14211ff5;padding:10px;z-index:12}
 #freeDestinationForm{flex-shrink:0}
 body.map-expanded .copilot.sat-compact{visibility:visible;pointer-events:auto;z-index:55}
 
@@ -48,3 +48,23 @@ body.free-flight-active #freeDestinationForm{position:fixed;left:16px;top:80px;w
 .sat-compact #waitTraffic,.sat-compact #collisionTrial{min-height:30px;padding:3px}
 @media(max-height:850px) and (min-width:950px){.copilot.sat-compact{top:60px;height:420px}}
 @keyframes event-notice{50%{opacity:.4}}.event-highlight{animation:event-notice .8s 5}
+
+/* Keep camera controls outside the assistant and the lower-left map. */
+.camera-tools{right:402px}
+#photoCameraControls button{font-size:11px!important;min-height:34px}
+#photoCameraControls>div:first-child{font-size:12px}
+#photoCameraControls p,#photoFocalReadout{font-size:11px}
+body.map-expanded #photoCameraControls{visibility:hidden;pointer-events:none}
+@media(min-width:761px) and (max-width:1050px){#photoCameraControls{left:15px;right:auto;top:104px;bottom:auto;width:300px}}
+@media(max-width:760px){#photoCameraControls{left:10px;right:10px;bottom:auto;top:60px}}
+
+/* Route editing is a map workspace, with one separate right-hand form. */
+body.map-expanded .minimap{right:392px}
+body.sat-editing .minimap{left:18px;right:392px;top:76px;bottom:20px;width:auto;height:auto}
+body.sat-editing #editor{left:auto;right:24px;top:76px;bottom:20px;width:354px;height:auto;max-height:none;z-index:55;background:#14211ff7}
+body.sat-editing :is(.copilot,.direction-console,.map-steering,footer,.reticle,.camera-tools,.camera-strip,#trafficReadout,#freeDestinationForm,#destinationPanel){visibility:hidden;pointer-events:none}
+body.sat-editing .map-heading button{visibility:hidden;pointer-events:none}
+body.sat-editing #editor .editor-fields{padding-right:2px}
+body.sat-editing #editor>.decision-buttons{margin-top:8px}
+@media(max-width:950px){body.sat-editing .minimap{left:10px;right:332px;top:62px;bottom:12px}body.sat-editing #editor{right:10px;top:62px;bottom:12px;width:310px}}
+@media(max-width:600px){body.sat-editing .minimap{left:10px;right:10px;top:60px;bottom:48dvh}body.sat-editing #editor{left:10px;right:10px;top:auto;bottom:10px;width:auto;height:calc(48dvh - 18px)}}
