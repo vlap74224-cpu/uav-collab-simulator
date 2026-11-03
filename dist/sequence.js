@@ -1,6 +1,6 @@
 (function(root){
 const C=typeof module!=='undefined'?require('./core.js'):root.UAV;
-const points=[{id:'home',name:'A · 起降区',point:[330,530]},{id:'lake',name:'B · 湖边巡检点',point:[350,330]},{id:'north',name:'C · 东北建筑群入口',point:[1150,180]},{id:'building',name:'D · 建筑巡检点',point:[618,816]},{id:'east',name:'E · 公园西侧着陆点',point:[220,470]}];
+const points=[{id:'home',name:'A · 起降区',point:[330,530]},{id:'lake',name:'B · 湖边巡检点',point:[350,330]},{id:'north',name:'C · 东北建筑群入口',point:[1150,180]},{id:'building',name:'D · 建筑巡检点',point:[618,816]},{id:'east',name:'E · 公园内着陆点',point:[290,470]}];
 const landmarks=[
  {id:'oriental-pearl',name:'东方明珠广播电视塔',shortName:'东方明珠',point:[-117,170],height:468,tier:1},
  {id:'aurora',name:'震旦国际大楼',shortName:'震旦大厦',point:[-228.5,748.9],height:128,tier:1},
@@ -63,7 +63,7 @@ function make(index,origin,battery){
   m.reason='从 B 点进入东侧城区，沿道路与建筑外缘依次绕过多栋建筑，充分利用扩展地图后到达东北建筑群入口；飞行期间持续检查临时空域通告。';
  }
  if(index===2){m.trafficMotionUpdate=true;m.route=[a,[1000,214],[1038,434],[772,532],[772,676],b];m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n4-long-legs-v7';m.controlPoints=[[1000,214],[1038,434],[772,532],[772,676],[618,816]];m.title='沿五个长航段绕建筑飞往 D 点';m.subtype='dynamic';m.reason='N4 沿城区通道以五个长航段飞行，仅保留四次主要转向；D 点位于操作者原图点 6，60 m 高度下最小建筑净距超过 21.8 m；交通目标在直线航段从前方以 9 m/s 接近，起飞后按双方位置和速度持续预测未来 60 秒的最近间隔。';m.limits+=' 采用匀速交通目标和三维间隔预测，40 m 为实验告警阈值，非真实适航标准。';}
- if(index===3){m.battery=battery;m.alternative=[a,b.slice()];m.title='电量余量下降，选择继续或返航';m.landingOnArrival=true;m.resourcePrepared=false;m.resourceRevision='n5-p4-p5-e-v2';m.taskPriorities={P4:'必需',P5:'可选',E:'必须着陆'};m.returnPoint=b.slice();m.resourceTaskRequests={required:[450,550],optional:points[1].point.slice()};m.destination={...points[4],point:b.slice()};m.title='先巡检P4、P5，再返回E着陆';m.reason='先检查完整任务的路径及返航余量；飞行中接收资源更新。';m.limits+=' 能耗随仿真时间、飞行距离和升降变化，未计风速、载荷和电池老化。';}
+ if(index===3){m.battery=battery;m.alternative=[a,b.slice()];m.title='电量余量下降，选择继续或返航';m.landingOnArrival=true;m.resourcePrepared=false;m.resourceRevision='n5-smooth-energy-v3';m.taskPriorities={P4:'必需',P5:'可选',E:'必须着陆'};m.returnPoint=b.slice();m.resourceTaskRequests={required:[450,550],optional:points[1].point.slice()};m.destination={...points[4],point:b.slice()};m.title='先巡检P4、P5，再返回E着陆';m.reason='先检查完整任务的路径及返航余量；飞行中接收资源更新。';m.limits+=' 能耗随仿真时间、飞行距离和升降变化，未计风速、载荷和电池老化。';}
  m.event=`${m.id} ${m.name} · ${'ABCDE'[index]} → ${'ABCDE'[index+1]}`;m.summary=m.title+'。请接受、修改或拒绝；确认后继续同一任务。';
  if(index===0)m.summary='路线包含 11 个互不交叉的航段和 4 个拍照打卡点；整体沿手绘外围环线，仅在碰撞位置局部绕障，完整模型最小净距约 22.0 m。请先复核路线。';
  if(index===3)m.summary+=' 到达选定终点后将自动下降着陆。';
