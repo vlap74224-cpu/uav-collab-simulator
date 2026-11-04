@@ -55,6 +55,7 @@ function describeResourceE({state:s,mission:m,evidence:e,draft:d,landingForecast
  return pack([['目标','P4必需 / P5可选；E着陆'],['计划',m.resourcePlanError||(s.resourcePlanning?'正在核算P4→E返航路线':action)],['状态',s.status==='inspecting'?'本机悬停，还需'+t(s.resourceInspectionRemaining):s.resourceDecision?.status==='active'?'剩余'+s.resourceDecision.seconds+'s决策；超时AI接手':s.resourceDecision?.status==='blocked'?'AI无法安全接手，请修改':s.resourceDecision?.status==='taken-over'&&s.status==='running'?'AI已接手，自动返E':event&&s.status==='review'?'P4悬停，等待确认':s.status==='running'?(done.includes('P4')?'P4完成，执行中':'前往P4，正常飞行'):Events.phase(s)]],[['原案',originalIssue],['优先','P4必须完成；P5允许取消'],['依据',basis]],[[deadline===null?'余电':'时间',prediction],['完成',completion],['局限',limit]]);
 }
 function describe(ctx){
+ if(ctx.mission.id==='N2'){const N=typeof module!=='undefined'?require('./n2-decision.js'):root.N2Decision;return N.describe(ctx);}
  if(ctx.mission.id==='N1'&&(ctx.mission.photoCheckpoints?.length||ctx.mission.photoCheckpoint)){const P=typeof module!=='undefined'?require('./photo-mission.js'):root.PhotoMission;return P.describe(ctx);}
  if(ctx.mission.resourceRevision==='n5-smooth-energy-v3')return describeResourceE(ctx);
  const {state:s,mission:m,evidence:e,comparison:q,position:p,draft:d}=ctx,base=legacyDescribe(ctx),v=d?.speed??s.speed,fmt=n=>Number.isFinite(n)?n.toFixed(1):'待计算',secs=n=>Number.isFinite(n)?Math.ceil(n)+'s':'缺少路径或计划速度',pair=(x,y,unit)=>Number.isFinite(x)&&Number.isFinite(y)?x.toFixed(1)+'→'+y.toFixed(1)+unit:'路径或速度数据未齐',phase=Events.phase(s),A=e?.A,O=e?.original;

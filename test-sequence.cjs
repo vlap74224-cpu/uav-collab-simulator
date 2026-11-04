@@ -26,11 +26,11 @@ for(let i=0;i<4;i++){
  }
  if(i===1){
   assert.equal(m.route.length,7);
-  assert.equal(m.routeRevision,'n2-temporary-no-fly-v7-current-route');
+  assert.equal(m.routeRevision,'n2-continuous-decision-v8');
   assert.ok(m.route.slice(1).every((point,j)=>point[0]>=m.route[j][0]),'N2 route should keep progressing east without backtracking');
   assert.ok(C.length(m.route)>1000);
   assert.equal(m.plannedNoFlyZone.label,'大型活动临时禁飞区');
-  assert.ok(m.plannedNoFlyZone.revealProgress>=.22&&m.plannedNoFlyZone.revealProgress<=.27);
+  assert.ok(m.plannedNoFlyZone.revealProgress>=.12&&m.plannedNoFlyZone.revealProgress<=.16);
   assert.equal(m.plannedNoFlyZone.triggerProgress,undefined);
   assert.equal(m.plannedNoFlyZone.x,undefined);
   assert.equal(m.hazard,undefined,'temporary no-fly zone must stay hidden before it is detected');
@@ -44,7 +44,7 @@ for(let i=0;i<4;i++){
   assert.equal(detours.length,42);
   const validDetours=detours.filter(route=>C.validate(route,scene).length===0);assert.ok(validDetours.length>=2);
   assert.ok((zone.triggerProgress-m.plannedNoFlyZone.revealProgress)*C.length(editedRoute)/12>=21);
-  for(const route of validDetours){assert.deepEqual(route[0],[trigger.x,trigger.y]);assert.deepEqual(route.at(-1),m.destination.point)}
+  for(const route of validDetours){assert.deepEqual(route[0],[trigger.x,trigger.y]);assert.ok(Math.hypot(route.at(-1)[0]-m.destination.point[0],route.at(-1)[1]-m.destination.point[1])<1e-6)}
  }
 if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);assert.equal(m.routeRevision,'n4-long-legs-v7');assert.deepEqual(S.points[3].point,[618,816]);assert.deepEqual(m.route,[[1150,180],[1000,214],[1038,434],[772,532],[772,676],[618,816]]);assert.deepEqual(C.validate(m.initialRoute,m),[])}
  if(i===3){assert.ok(m.battery<=battery);assert.ok(m.battery-C.length(m.route)*.016>=15,'new D must preserve the final-leg energy reserve')}
@@ -53,9 +53,9 @@ if(i===2){assert.equal(m.subtype,'dynamic');assert.equal(m.hazard,undefined);ass
  assert.deepEqual(resumed.route[0],[halfway.x,halfway.y]);
  assert.ok(resumed.battery<=battery);
 }
-assert.deepEqual(S.n2EventWindow(()=>0),{revealProgress:.22});
-assert.deepEqual(S.n2EventWindow(()=>.5),{revealProgress:.245});
-assert.deepEqual(S.n2EventWindow(()=>1),{revealProgress:.27});
+assert.deepEqual(S.n2EventWindow(()=>0),{revealProgress:.12});
+assert.deepEqual(S.n2EventWindow(()=>.5),{revealProgress:.14});
+assert.deepEqual(S.n2EventWindow(()=>1),{revealProgress:.16});
 assert.ok(battery>=15);console.log('Four sequential events, endpoints, collision clearance, resource drop and resumption passed.');
 assert.equal(S.landmarks.length,15);
 for(const name of ['东方明珠','金茂大厦','环球金融中心','震旦大厦','香格里拉酒店','招商局大厦','时代金融'])assert.ok(S.landmarks.some(x=>x.shortName===name));

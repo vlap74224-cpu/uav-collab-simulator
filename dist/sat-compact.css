@@ -87,3 +87,9 @@ body.free-map-workspace .map-heading button{visibility:hidden;pointer-events:non
 .free-destination-handle{display:grid!important;place-items:center;cursor:grab;touch-action:none;background:transparent;border:0}.free-destination-handle:active{cursor:grabbing}.free-destination-handle span{display:block;width:24px;height:24px;border:3px solid #b9c2c8;border-radius:50%;background:#7f8c9466;box-shadow:0 1px 5px #0008;pointer-events:none}.free-destination-handle:focus-visible{outline:2px solid #b5ed98;outline-offset:1px;border-radius:50%}
 
 .sat-task-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%;font-size:14px;line-height:20px}.photo-flow-step{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}.photo-flow-step:not(:last-child)::after{content:'→';position:absolute;right:-9px;top:0;color:#a6bbb0}.photo-flow-symbol{line-height:18px}.photo-flow-name{overflow-wrap:anywhere}.photo-flow-step[data-photo-state=done]{color:#b5ed98}.photo-flow-step[data-photo-state=current]{color:#ffdb7b}.photo-flow-step[data-photo-state=pending]{color:#b5c3bc}.sat-compact .sat-section:has(.sat-task-flow){flex:1.4}.sat-compact .sat-section:has(.sat-task-flow) .sat-line:first-of-type{margin-bottom:2px}
+
+/* Same N2 event AOI and deadline in every transparency condition. */
+body.n2-active .copilot.sat-compact{height:420px}
+body.n2-active .sat-section{flex:none;min-height:0;padding:4px 6px}body.n2-active #satCards{justify-content:space-between}
+body.n2-active #originalRoute{stroke:#99a5a3;stroke-dasharray:8 8;opacity:1}
+.n2-edit-state{margin-bottom:10px;padding:8px;background:#23372d;border-left:3px solid #b5ed98;border-radius:6px;font-size:14px;line-height:20px}.n2-edit-state[hidden]{display:none}.n2-edit-state h2{font-size:14px;line-height:20px;margin:0 0 4px}.n2-edit-state .sat-line{display:flex;gap:6px}.n2-edit-state .sat-label{flex:0 0 30px;color:#a6bbb0}

@@ -21,10 +21,10 @@ const landmarks=[
 const nodes=['N1','N2','N4','N5'];
 function n2EventWindow(random=Math.random){
  const sample=()=>{const value=Number(random());return Math.max(0,Math.min(1,Number.isFinite(value)?value:0))};
- return{revealProgress:Number((.22+sample()*.05).toFixed(3))};
+ return{revealProgress:Number((.12+sample()*.04).toFixed(3))};
 }
 function n2DynamicNoFlyZone(route,revealProgress,random=Math.random){
- const total=C.length(route),reveal=Math.max(0,Math.min(.9,Number(revealProgress)||0)),value=Number(random()),sample=Math.max(0,Math.min(1,Number.isFinite(value)?value:0)),r=55,margin=25,remaining=total*(1-reveal),maxAhead=Math.max(r+margin+55,Math.min(500,remaining-35)),minAhead=Math.min(380,maxAhead),ahead=minAhead+(maxAhead-minAhead)*sample,routeProgress=Math.min(.96,reveal+ahead/total),stopClearance=r+margin+45,triggerProgress=Math.max(reveal+.05,routeProgress-stopClearance/total),point=C.sample(route,routeProgress);
+ const total=C.length(route),reveal=Math.max(0,Math.min(.9,Number(revealProgress)||0)),value=Number(random()),sample=Math.max(0,Math.min(1,Number.isFinite(value)?value:0)),r=55,margin=25,remaining=total*(1-reveal),maxAhead=Math.max(r+margin+55,Math.min(620,remaining-35)),minAhead=Math.min(520,maxAhead),ahead=minAhead+(maxAhead-minAhead)*sample,routeProgress=Math.min(.96,reveal+ahead/total),stopClearance=r+margin+45,triggerProgress=Math.max(reveal+.05,routeProgress-stopClearance/total),point=C.sample(route,routeProgress);
  return{x:point.x,y:point.y,r,margin,routeProgress:Number(routeProgress.toFixed(4)),triggerProgress:Number(triggerProgress.toFixed(4)),label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
 }
 function n2Detours(origin,destination,zone,interruptedRoute){
@@ -57,8 +57,8 @@ function make(index,origin,battery){
  if(index===1){
   // Seven key points keep the verified corridor readable on the minimap.
   m.route=[a,[500,280],[650,230],[800,101.43],[1000,-70],[1050,13.33],b];
-  m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n2-temporary-no-fly-v7-current-route';
-  m.plannedNoFlyZone={...n2EventWindow(),label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
+  m.initialRoute=C.clone(m.route);m.alternative=C.clone(m.route);m.routeRevision='n2-continuous-decision-v8';
+  m.n2Options={decisionSeconds:15};m.plannedNoFlyZone={...n2EventWindow(),label:'大型活动临时禁飞区',activity:'陆家嘴大型会展活动安保'};
   m.title='跨越东侧城区正常巡航，前往新 C 点';
   m.reason='从 B 点进入东侧城区，沿道路与建筑外缘依次绕过多栋建筑，充分利用扩展地图后到达东北建筑群入口；飞行期间持续检查临时空域通告。';
  }
