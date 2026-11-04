@@ -37,7 +37,7 @@ async function planItinerary({origin,via=[],target,...options}){
   let leg;try{leg=await plan({...options,origin:current,target:destination});}catch(error){throw Error((i<via.length?'途经点'+(i+1):'终点')+'：'+error.message);}
   for(const p of leg.slice(1))if(distance(route.at(-1),p)>.001)route.push(p.slice());
   current=leg.at(-1).slice();
-  if(i<via.length)stops.push({id:destination.id,name:'途经点'+(i+1),point:current.slice(),requestedPoint:destination.point.slice()});
+  if(i<via.length)stops.push({id:destination.id,name:destination.shortName||destination.name||'途经点'+(i+1),point:current.slice(),requestedPoint:destination.point.slice()});
  }
  if(route.length===1)route.push(current.slice());
  return {route,stops};
