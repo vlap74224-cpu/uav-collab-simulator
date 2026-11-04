@@ -17,10 +17,10 @@ function forecast(m,s,position,draft){
  if(target){const visit=R.visits(remaining,[target]).visits[0];if(!visit)return {reason:'当前航迹未覆盖'+name(target)};distance=visit.distance;}
  else distance=C.length(remaining);
  const seconds=distance/speed,vertical=Math.abs((s.targetAltitude??s.altitude)-s.altitude)>.01||Math.abs(s.verticalSpeed||0)>.01,endBattery=Number.isFinite(s.battery)&&!vertical?Math.max(0,s.battery-distance*.0016-seconds*.001):null;
- const pending=data.tasks.filter(t=>!data.done.includes(t.id)),dwellSamples=s.photoPrediction?.photoDwellSamples||[],dwellSeconds=dwellSamples.length?dwellSamples.reduce((sum,x)=>sum+x.seconds,0)/dwellSamples.length:(m.photoDwellEstimateSeconds||20),currentElapsed=waiting&&Number.isFinite(s.photoHoldStartedAt)?Math.max(0,(s.simTime||0)-s.photoHoldStartedAt):0;
+ const pending=data.tasks.filter(t=>!data.done.includes(t.id)),dwellSamples=s.photoPrediction?.photoDwellSamples||[],dwellSeconds=20,currentElapsed=waiting&&Number.isFinite(s.photoHoldStartedAt)?Math.max(0,(s.simTime||0)-s.photoHoldStartedAt):0;
  const remainingPhotoSeconds=pending.reduce((sum,t)=>sum+(waiting&&t===data.current?Math.max(0,dwellSeconds-currentElapsed):dwellSeconds),0),taskDistance=C.length(remaining),taskFlightSeconds=taskDistance/speed,taskSeconds=taskFlightSeconds+remainingPhotoSeconds;
  const taskEndBattery=Number.isFinite(s.battery)&&!vertical?Math.max(0,s.battery-taskDistance*.0016-taskFlightSeconds*.001-remainingPhotoSeconds*.001):null;
- const dwellSource=dwellSamples.length?'按本任务已保存的拍照停留均值 '+dwellSeconds.toFixed(1)+'秒/点':'按每点 '+dwellSeconds.toFixed(0)+'秒预留拍照悬停';
+ const dwellSource='按每点 '+dwellSeconds.toFixed(0)+'秒预留拍照悬停';
  return {target:target?.id||'mission-end',name:targetName,displayName:target?.flowLabel||targetName,point:targetPoint.slice(),distance,speed,seconds,endBattery,batteryReason:vertical?'当前升降耗电尚未纳入预测':null,afterPhoto:waiting,endpoint:!target,scope:'下一站飞行',conditions:speed+'m/s、恒高无风；未含拍照停留'+(target?'、返航':''),taskDistance,taskFlightSeconds,taskPhotoSeconds:remainingPhotoSeconds,taskSeconds,taskEndBattery,taskDwellSeconds:dwellSeconds,dwellSamples:dwellSamples.length,dwellSource,currentPhotoElapsed:currentElapsed,currentPhotoRemainingSeconds:Math.max(0,dwellSeconds-currentElapsed),pendingPhotoCount:pending.length,taskBatteryReason:vertical?'当前升降耗电尚未纳入全程预测':null,taskScope:'从当前位置经剩余打卡点至'+m.destination.name};
 }
 const predictionVersion='n1-observed-leg-v1',round=n=>Number.isFinite(n)?Math.round(n*10)/10:null,routeKey=s=>JSON.stringify([s.route,s.speed]);
@@ -64,7 +64,7 @@ function projection(m,s,position,draft){
  if(f.reason)return [['预计',f.reason],['局限','缺少有效航线或计划速度，无法预测全任务'],['表现','任务完成情况暂不可判断']];
  const nextEta=seconds(f.seconds)+'至'+f.displayName+(Number.isFinite(f.endBattery)?' · 余电'+charge(f.endBattery):''),taskEta=seconds(f.taskSeconds),taskEnd=Number.isFinite(f.taskEndBattery)?charge(f.taskEndBattery):'暂不可预测';
  const fullResult=Number.isFinite(f.taskSeconds)&&Number.isFinite(f.taskEndBattery)?'全程约'+taskEta+'至终点 · 预计余电'+taskEnd:'全程到达时间或终点余电暂不可预测';
- const limits=f.speed+'m/s、恒高无风'+(f.taskBatteryReason?'；升降耗电未计':'')+'；不含下降/着陆';
+ const limits='拍照按每点20秒估算；悬停、转弯、减速可能使任务延后。';
  const performance='预计任务顺利完成率97%';
  if(waiting)return [['预计','保存后'+nextEta+'；'+fullResult],['局限',limits],['表现',performance]];
  return [['预计',nextEta+'；'+fullResult],['局限',limits],['表现',performance]];
