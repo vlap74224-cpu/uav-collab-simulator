@@ -122,3 +122,31 @@ body.free-map-workspace #freeDestinationForm>#freeDestination{grid-column:1/3}
 body.free-map-workspace #freeDestinationForm>#freeDestinationOptions{grid-column:3;font-size:13px;padding-left:5px}
 body.free-map-workspace #freeViaList::-webkit-scrollbar{height:6px}
 body.free-map-workspace #freeMapWorkspacePanel{gap:6px}
+.free-route-flow{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 4px;width:100%;line-height:20px}
+.free-flow-arrow{color:#a9b9b0}.free-flow-stop{overflow-wrap:anywhere}
+.free-changed-value{background:#b5ed9824;border-radius:3px;animation:free-update-emphasis 1s ease-in-out infinite alternate}
+.free-via-handle.free-changed-value{background:transparent;box-shadow:0 0 0 5px #b5ed984d;border-radius:50%}
+.free-changed-segments{opacity:.7;pointer-events:none;animation:free-route-emphasis 1s ease-in-out infinite alternate}
+.free-changed-segments[hidden]{display:none}
+@keyframes free-update-emphasis{from{background-color:#b5ed981a}to{background-color:#b5ed9855}}
+@keyframes free-route-emphasis{from{opacity:.35}to{opacity:.85}}
+@media(prefers-reduced-motion:reduce){.free-changed-value,.free-changed-segments{animation:none}}
+
+/* A shorter navigation bar leaves more room for the existing map/editor columns. */
+@media(min-width:761px){
+ :root{--cockpit-bar-height:44px;--free-workspace-width:clamp(354px,32vw,410px)}
+ .topbar{height:var(--cockpit-bar-height);gap:18px;padding:0 18px}
+ .topbar .brand{font-size:18px}
+ .topbar .mission-nav-trigger{padding:0 16px}
+ .destination{top:var(--cockpit-bar-height)}
+ .camera-strip{top:54px}
+ body.free-map-workspace .minimap{left:16px;right:calc(var(--free-workspace-width) + 30px);top:56px;bottom:12px}
+ body.free-map-workspace #freeMapWorkspacePanel{right:16px;top:56px;bottom:12px;width:var(--free-workspace-width);padding:10px}
+ body.free-map-workspace #freeDestinationForm{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}
+ body.free-map-workspace #freeDestinationForm>#freeDestinationOptions{grid-column:1/-1;font-size:14px;padding:7px 8px}
+ body.free-map-workspace #freeDestinationForm>#freeDestination{grid-column:1/-1;padding:7px 8px}
+ body.free-map-workspace #freeNavigationStatus:empty{display:none}
+ body.free-map-workspace .copilot.sat-compact .sat-section{padding:5px 6px}
+ body.sat-editing .minimap{top:56px;bottom:12px}
+ body.sat-editing #editor{top:56px;bottom:12px}
+}

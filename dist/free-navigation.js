@@ -54,5 +54,13 @@ function stopVisits(route,stops=[]){
  return visits;
 }
 function validateStops(route,stops=[]){const visits=stopVisits(route,stops);return visits.length===stops.length?[]:['航线必须按顺序经过'+stops.slice(visits.length).map(x=>x.name).join('、')+'；可在目的地面板调整途经点'];}
-const api={resolve,plan,planItinerary,stopVisits,validateStops,maxViaPoints};if(typeof module!=='undefined')module.exports=api;else root.FreeNavigation=api;
+function itineraryLegs(route,stops=[],destinationName='终点'){
+ if(!route?.length||route.length<2)return [];
+ const walked=[0];for(let i=1;i<route.length;i++)walked.push(walked.at(-1)+distance(route[i-1],route[i]));
+ const at=d=>{for(let i=1;i<walked.length;i++)if(d<=walked[i]){const t=walked[i]>walked[i-1]?(d-walked[i-1])/(walked[i]-walked[i-1]):0;return route[i].map((x,k)=>route[i-1][k]+(x-route[i-1][k])*t);}return route.at(-1).slice();};
+ const anchors=[{id:'origin',name:'当前位置',label:'当前位置',distance:0},...stopVisits(route,stops).map((s,i)=>({...s,label:'途经'+(i+1)})),{id:'destination',name:destinationName,label:'终点',distance:walked.at(-1)}],legs=[];
+ for(let i=1;i<anchors.length;i++){const a=anchors[i-1],b=anchors[i],part=[at(a.distance)];for(let j=1;j<route.length-1;j++)if(walked[j]>a.distance+.001&&walked[j]<b.distance-.001)part.push(route[j].slice());part.push(at(b.distance));legs.push({fromId:a.id,toId:b.id,from:a.label,to:b.label,fromName:a.name,toName:b.name,route:part,key:JSON.stringify([a.id,b.id,part])});}
+ return legs;
+}
+const api={resolve,plan,planItinerary,stopVisits,validateStops,itineraryLegs,maxViaPoints};if(typeof module!=='undefined')module.exports=api;else root.FreeNavigation=api;
 })(typeof window!=='undefined'?window:globalThis);
