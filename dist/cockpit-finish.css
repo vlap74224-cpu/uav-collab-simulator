@@ -50,3 +50,14 @@ body.tablet-cockpit,body.tablet-cockpit.very-short-cockpit{--rail-width:320px;--
 .tablet-cockpit.short-cockpit #cockpitRail #verticalStatus{line-height:14px}
 .tablet-cockpit.free-map-workspace #freeMapWorkspacePanel,.tablet-cockpit.sat-editing #editor{background:rgba(13,29,25,.66);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .tablet-cockpit.free-map-workspace .sat-compact #satCards{gap:6px}
+
+/* Editing keeps the same three levels above the scrollable route controls. */
+#n2EditNotice{padding:0;margin:0 0 6px;border:0;background:none;display:grid;gap:4px;flex:none}
+#n2EditNotice[hidden]{display:none}
+.n2-edit-level{--level-colour:#85d3b1;border:1px solid var(--level-colour);border-left-width:3px;border-radius:6px;padding:3px 6px;background:rgba(13,30,26,.72)}
+.n2-edit-level[data-level=reason]{--level-colour:#d6b878}.n2-edit-level[data-level=projection]{--level-colour:#8bbbe3}
+.n2-edit-level h2{font-size:14px;line-height:20px;margin:0 0 2px}.n2-edit-level .sat-line{display:flex;gap:5px;font-size:14px;line-height:20px;overflow-wrap:anywhere}
+.n2-edit-level .sat-label{flex:0 0 30px;color:#c0d0c6}
+#n2EditNotice:not([hidden])~.editor-fields>p.muted:not(#routeDrawHint){display:none}
+.tablet-cockpit.short-cockpit.free-map-workspace .sat-compact .sat-section{padding:2px 6px}
+.tablet-cockpit.short-cockpit.free-map-workspace .sat-compact #satCards{gap:4px}
