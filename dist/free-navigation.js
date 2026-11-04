@@ -27,5 +27,32 @@ async function plan({origin,target,bounds,clearance,collision,active=()=>true}){
  }
  throw Error('当前高度未找到安全航线，请调整高度或更换目的地');
 }
-const api={resolve,plan};if(typeof module!=='undefined')module.exports=api;else root.FreeNavigation=api;
+const maxViaPoints=12;
+async function planItinerary({origin,via=[],target,...options}){
+ if(via.length>maxViaPoints)throw Error('最多设置'+maxViaPoints+'个途经点');
+ const route=[origin.slice()],stops=[];let current=origin.slice();
+ for(let i=0;i<=via.length;i++){
+  const destination=i<via.length?via[i]:target;
+  if(!destination?.point||destination.point.length!==2||destination.point.some(x=>!Number.isFinite(x)))throw Error('选点位置无效');
+  let leg;try{leg=await plan({...options,origin:current,target:destination});}catch(error){throw Error((i<via.length?'途经点'+(i+1):'终点')+'：'+error.message);}
+  for(const p of leg.slice(1))if(distance(route.at(-1),p)>.001)route.push(p.slice());
+  current=leg.at(-1).slice();
+  if(i<via.length)stops.push({id:destination.id,name:'途经点'+(i+1),point:current.slice(),requestedPoint:destination.point.slice()});
+ }
+ if(route.length===1)route.push(current.slice());
+ return {route,stops};
+}
+function stopVisits(route,stops=[]){
+ const visits=[];let cursor=-.001;
+ if(!Array.isArray(route)||route.length<2||route.some(p=>!Array.isArray(p)||p.length!==2||p.some(x=>!Number.isFinite(x))))return visits;
+ for(const stop of stops){let walked=0,found=null;
+  for(let i=1;i<route.length;i++){const a=route[i-1],b=route[i],dx=b[0]-a[0],dy=b[1]-a[1],len=distance(a,b),t=len?Math.max(0,Math.min(1,((stop.point[0]-a[0])*dx+(stop.point[1]-a[1])*dy)/(len*len))):0,at=walked+t*len;
+   if(at>=cursor-.001&&distance([a[0]+dx*t,a[1]+dy*t],stop.point)<=.5){found={...stop,distance:at};break;}walked+=len;
+  }
+  if(!found)break;visits.push(found);cursor=found.distance;
+ }
+ return visits;
+}
+function validateStops(route,stops=[]){const visits=stopVisits(route,stops);return visits.length===stops.length?[]:['航线必须按顺序经过'+stops.slice(visits.length).map(x=>x.name).join('、')+'；可在目的地面板调整途经点'];}
+const api={resolve,plan,planItinerary,stopVisits,validateStops,maxViaPoints};if(typeof module!=='undefined')module.exports=api;else root.FreeNavigation=api;
 })(typeof window!=='undefined'?window:globalThis);

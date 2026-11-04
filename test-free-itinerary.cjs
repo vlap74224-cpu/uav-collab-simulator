@@ -1,0 +1,28 @@
+const assert=require('node:assert/strict'),N=require('./dist/free-navigation'),P=require('./dist/photo-route');
+(async()=>{
+ const bounds={minX:0,maxX:600,minY:0,maxY:600},base={origin:[60,300],target:{point:[540,300]},bounds,clearance:()=>100,collision:()=>false};
+ const via=[{id:'v1',point:[180,120]},{id:'v2',point:[420,480]}];
+ const initial=await N.planItinerary({...base,via});
+ assert.deepEqual(initial.route,[base.origin,...via.map(x=>x.point),base.target.point]);
+ assert.equal(N.validateStops(initial.route,initial.stops).length,0);
+ assert(N.validateStops([base.origin,base.target.point],initial.stops).length,'shortcut must not omit selected stops');
+ const reverse=await N.planItinerary({...base,via:via.slice().reverse()});
+ assert.deepEqual(reverse.stops.map(x=>x.id),['v2','v1']);
+ assert(N.validateStops(reverse.route,initial.stops).length,'opposite order must not pass');
+ const moved=await N.planItinerary({...base,via:[{...via[0],point:[200,100]},via[1]]});
+ assert.deepEqual(moved.stops[0].point,[200,100]);
+ const removed=await N.planItinerary({...base,via:via.slice(1)});
+ assert.deepEqual(removed.stops.map(x=>x.id),['v2']);
+ const collision=(a,b)=>{for(let i=0;i<=100;i++){const x=a[0]+(b[0]-a[0])*i/100,y=a[1]+(b[1]-a[1])*i/100;if(x>250&&x<350&&y>180&&y<420)return true;}return false;};
+ const detour=await N.planItinerary({...base,via:[{id:'detour',point:[420,300]}],collision});
+ assert(detour.route.length>3);for(let i=1;i<detour.route.length;i++)assert(!collision(detour.route[i-1],detour.route[i]));
+ assert.equal(N.validateStops(detour.route,detour.stops).length,0);
+ const nearby=await N.planItinerary({...base,via:[{id:'nearby',point:[180,120]}],clearance:q=>Math.hypot(q[0]-180,q[1]-120)<10?0:100});
+ assert.notDeepEqual(nearby.stops[0].point,nearby.stops[0].requestedPoint);
+ assert.equal(N.validateStops(nearby.route,nearby.stops).length,0);
+ const simplified=P.simplify(initial.route,initial.stops,[],14,1000);assert.equal(N.validateStops(simplified,initial.stops).length,0,'manual simplification must retain anchors');
+ const remaining=[via[0].point,...initial.route.slice(2)];assert.equal(N.validateStops(remaining,initial.stops.slice(1)).length,0,'a visited stop is not required again');
+ await assert.rejects(N.planItinerary({...base,via,active:()=>false}),/已取消/);
+ await assert.rejects(N.planItinerary({...base,via:Array.from({length:13},()=>via[0])}),/最多/);
+ console.log('PASS multiple stops, requested order, drag/reorder/delete replans, mandatory anchors, detours, safe suggested positions, passed-stop exclusion and cancellation');
+})().catch(error=>{console.error(error);process.exitCode=1;});

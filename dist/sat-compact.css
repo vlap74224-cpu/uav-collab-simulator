@@ -97,3 +97,28 @@ body.n2-active #originalRoute{stroke:#99a5a3;stroke-dasharray:8 8;opacity:1}
 /* N1 keeps the existing cockpit AOI; its three sections fit their actual rows. */
 body.n1-active #satCards{justify-content:space-between}
 body.n1-active .sat-section,body.n1-active .sat-section:has(.sat-task-flow){flex:none;min-height:0}
+
+/* Free-flight itinerary controls share the existing map workspace. */
+#freeViaList{grid-column:1/-1;display:flex;gap:6px;max-width:100%;overflow-x:auto;padding:2px 0 5px;touch-action:pan-x}
+#freeViaList[hidden]{display:none}
+.free-via-item{flex:0 0 128px;padding:4px 6px;border:1px solid #ffffff2a;border-radius:6px;background:#21332d;font-size:13px;line-height:18px}
+.free-via-item>div{display:flex;gap:5px;margin-top:3px}
+#freeDestinationForm .free-via-item button{flex:1;min-height:25px;padding:1px 6px;font-size:15px}
+#addFreeVia[aria-pressed=true]{border-color:#b5ed98;color:#b5ed98;background:#30452d}
+.free-via-handle{display:grid!important;place-items:center;border:0;background:transparent;touch-action:none;cursor:grab}
+.free-via-handle b{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;border:3px solid #5fe2bd;background:#233830;color:#fff;font-size:14px;box-shadow:0 1px 5px #0008}
+.free-via-handle:active{cursor:grabbing}.free-via-fixed{visibility:hidden}
+body.free-map-workspace .sat-compact .sat-section{flex:none;padding:5px 7px}
+body.free-map-workspace .sat-compact #satCards{justify-content:space-between}
+body.free-map-workspace #freeDestinationForm{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+body.free-map-workspace #freeDestinationForm>label{display:none}
+body.free-map-workspace #freeDestinationForm :is(input,select,#cancelFreeNavigation){grid-column:1/-1}
+body.free-map-workspace #freeDestinationForm button{font-size:13px;padding:6px 3px;min-height:30px}
+body.free-map-workspace #freeViaList{padding-bottom:3px}
+body.free-map-workspace .free-via-item{display:flex;align-items:center;gap:5px;flex-basis:auto;white-space:nowrap;padding:3px 5px}
+body.free-map-workspace .free-via-item>div{margin-top:0;gap:2px}
+body.free-map-workspace #freeDestinationForm .free-via-item button{min-height:25px;min-width:25px;padding:1px 4px}
+body.free-map-workspace #freeDestinationForm>#freeDestination{grid-column:1/3}
+body.free-map-workspace #freeDestinationForm>#freeDestinationOptions{grid-column:3;font-size:13px;padding-left:5px}
+body.free-map-workspace #freeViaList::-webkit-scrollbar{height:6px}
+body.free-map-workspace #freeMapWorkspacePanel{gap:6px}
