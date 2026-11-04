@@ -93,3 +93,7 @@ body.n2-active .copilot.sat-compact{height:420px}
 body.n2-active .sat-section{flex:none;min-height:0;padding:4px 6px}body.n2-active #satCards{justify-content:space-between}
 body.n2-active #originalRoute{stroke:#99a5a3;stroke-dasharray:8 8;opacity:1}
 .n2-edit-state{margin-bottom:10px;padding:8px;background:#23372d;border-left:3px solid #b5ed98;border-radius:6px;font-size:14px;line-height:20px}.n2-edit-state[hidden]{display:none}.n2-edit-state h2{font-size:14px;line-height:20px;margin:0 0 4px}.n2-edit-state .sat-line{display:flex;gap:6px}.n2-edit-state .sat-label{flex:0 0 30px;color:#a6bbb0}
+
+/* N1 keeps the existing cockpit AOI; its three sections fit their actual rows. */
+body.n1-active #satCards{justify-content:space-between}
+body.n1-active .sat-section,body.n1-active .sat-section:has(.sat-task-flow){flex:none;min-height:0}
