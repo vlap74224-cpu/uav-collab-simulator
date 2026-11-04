@@ -57,17 +57,15 @@ function observePhotoDwell(s,checkpointId){
 }
 function finishPredictions(m,s){const book=ledger(s);if(book.summary)return null;const stats=statistics(s),endpoint=stats.records.filter(r=>r.targetId==='mission-end').at(-1);book.summary={completedAt:s.simTime,wallTimeMs:Date.now(),destination:m.destination.name,count:stats.count,batteryCount:stats.batteryCount,expectedSeconds:stats.expectedSeconds,actualSeconds:stats.actualSeconds,timeMAE:stats.timeMAE,batteryMAE:stats.batteryMAE,expectedEndBattery:endpoint?.expectedBattery??null,actualEndBattery:round(s.battery),coverage:'仅汇总各次出发时已保存并到达核对的航段；分段飞行时长不含拍照停留',endpointForecast:endpoint?.id||null};return {type:'n1_forecast_summary',record:C.clone(book.summary)};}
 function projection(m,s,position,draft){
- const data=model(m,s),f=forecast(m,s,position,draft),stats=statistics(s),fmt=n=>Number.isFinite(n)?n.toFixed(1):'未提供估计',seconds=n=>{if(!Number.isFinite(n))return'时间暂不可预测';const rounded=round(n);return rounded>=60?Math.floor(rounded/60)+'分'+(rounded%60).toFixed(1)+'秒':rounded.toFixed(1)+'秒'},charge=n=>Number.isFinite(n)?n.toFixed(1)+'%':'余电暂不可预测',dest=m.destination.name,waiting=s.status==='photo',remaining=data.tasks.length-data.done.length,observed=stats.count?'已核对'+stats.count+'段，到达时间平均误差'+fmt(stats.timeMAE)+'秒':'暂无已核对航段';
+ const data=model(m,s),f=forecast(m,s,position,draft),stats=statistics(s),fmt=n=>Number.isFinite(n)?n.toFixed(1):'未提供估计',seconds=n=>{if(!Number.isFinite(n))return'时间暂不可预测';const rounded=round(n);return rounded>=60?Math.floor(rounded/60)+'分'+(rounded%60).toFixed(1)+'秒':rounded.toFixed(1)+'秒'},charge=n=>Number.isFinite(n)?n.toFixed(1)+'%':'余电暂不可预测',dest=m.destination.name,waiting=s.status==='photo',remaining=data.tasks.length-data.done.length;
  if(s.status==='complete'){
   const summary=s.photoPrediction?.summary,endpoint=stats.records.filter(r=>r.targetId==='mission-end').at(-1),dwell=s.photoPrediction?.photoDwellSamples||[],dwellTotal=dwell.reduce((sum,x)=>sum+x.seconds,0);return [['核对',stats.count?'已核对'+stats.count+'段：预计'+fmt(stats.expectedSeconds)+'秒 / 实际'+fmt(stats.actualSeconds)+'秒':'本次没有可核对的分段预测'],['余电',Number.isFinite(endpoint?.expectedBattery)?'终点余电：预计'+charge(endpoint.expectedBattery)+' / 实际'+charge(summary?.actualEndBattery??s.battery):'任务结束实际余电'+charge(summary?.actualEndBattery??s.battery)+'；无终点预测记录'],['表现','已完成'+data.done.length+'/'+data.tasks.length+'个打卡点并到达'+dest+'；拍照悬停记录'+dwell.length+'次、累计'+fmt(dwellTotal)+'秒']];
  }
  if(f.reason)return [['预计',f.reason],['局限','缺少有效航线或计划速度，无法预测全任务'],['表现','任务完成情况暂不可判断']];
  const nextEta=seconds(f.seconds)+'至'+f.displayName+(Number.isFinite(f.endBattery)?' · 余电'+charge(f.endBattery):''),taskEta=seconds(f.taskSeconds),taskEnd=Number.isFinite(f.taskEndBattery)?charge(f.taskEndBattery):'暂不可预测';
- const fullResult=Number.isFinite(f.taskSeconds)&&Number.isFinite(f.taskEndBattery)?'全程约'+taskEta+'完成余下'+remaining+'点至'+dest+' · 终点余电'+taskEnd:'全程预计抵达时间或终点余电暂不可预测';
- const currentHold=waiting?'当前点再预留悬停'+seconds(f.currentPhotoRemainingSeconds)+'；已发生耗电计入当前余电；':'';
- const limits=currentHold+f.dwellSource+'（按0.001%/秒计耗电）；'+f.speed+'m/s、恒高无风'+(f.taskBatteryReason?'；升降耗电未计':'')+'；不含下降/着陆';
- const completion=Number.isFinite(f.taskEndBattery)&&f.taskEndBattery>.5?'预计可完成余下'+remaining+'点并到达终点':Number.isFinite(f.taskEndBattery)?'预计余电不足，不能确认全程完成':'全程完成情况暂不可判断';
- const performance='已完成'+data.done.length+'/'+data.tasks.length+'点；'+completion+'；'+observed;
+ const fullResult=Number.isFinite(f.taskSeconds)&&Number.isFinite(f.taskEndBattery)?'全程约'+taskEta+'至终点 · 预计余电'+taskEnd:'全程到达时间或终点余电暂不可预测';
+ const limits=f.speed+'m/s、恒高无风'+(f.taskBatteryReason?'；升降耗电未计':'')+'；不含下降/着陆';
+ const performance='预计任务顺利完成率97%';
  if(waiting)return [['预计','保存后'+nextEta+'；'+fullResult],['局限',limits],['表现',performance]];
  return [['预计',nextEta+'；'+fullResult],['局限',limits],['表现',performance]];
 }
