@@ -79,7 +79,7 @@ function describe({state:s,mission:m,evidence:e,position:p,draft:d,errors=[]}){
  else if(s.status==='running')action=s.photoJustSaved&&s.simTime-s.photoJustSaved.at<8?'本点打卡完成，'+(current?'下一站'+name(current):'前往'+dest):current?'正在前往'+name(current):'打卡完成，前往'+dest;
  else if(s.status==='paused')action='飞行已暂停；'+(current?'下一站'+name(current):'后续终点'+dest);
  else if(s.status==='manual')action='手动接管；需重规划巡检航线';
- else action=current?'待确认环绕航线；首个未完成点'+name(current):'四点完成，待确认至'+dest;
+ else action=current?'待确认航线；下一站'+name(current):'四点完成，待确认至'+dest;
  const leg=e?.leg,g=leg?.geometry,z=leg?.zone;
  let check=!leg?'当前导航段尚未检查':g?.collision?'当前导航段与楼体相交':z?.intersects?'当前导航段进入已知禁区':g?.status==='pending'?'当前导航段楼体净距核算中':g?.status!=='done'?'当前导航段建筑检查数据缺失':g.min<leg.threshold?'当前导航段采样净距低于告警值':'当前导航段未交楼体、已知禁区';
  const clearance=g?.status==='done'?'机体净距采样'+fmt(Math.floor(g.min*10)/10)+'m / 告警≥'+fmt(leg.threshold)+'m':'建筑净距尚未提供';

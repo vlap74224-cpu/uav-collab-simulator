@@ -1,0 +1,47 @@
+/* Separate the three information levels; colour identifies the level in every condition. */
+.copilot.sat-compact{background:rgba(13,29,25,.22);border-color:#d6eee12e;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);box-shadow:0 6px 24px #0002}
+.sat-compact #satCards{gap:6px}
+.sat-compact .sat-section{--level-colour:#85d3b1;border:1px solid var(--level-colour);border-left-width:3px;border-radius:7px;background:rgba(13,30,26,.69);box-shadow:none}
+.sat-compact .sat-section[data-level=reason]{--level-colour:#d6b878}
+.sat-compact .sat-section[data-level=projection]{--level-colour:#8bbbe3}
+.sat-compact .sat-section.focus{border-color:var(--level-colour);border-left-color:var(--level-colour);background:rgba(19,38,31,.73);box-shadow:inset 0 0 0 1px var(--level-colour)}
+.sat-compact .sat-label{color:#c0d0c6}
+.sat-compact #decisionPanel{border:0;background:rgba(13,30,26,.54);border-radius:6px;padding:5px}
+
+/* A slim altitude column leaves most of the controller to a large touch pad. */
+body.tablet-cockpit,body.tablet-cockpit.very-short-cockpit{--rail-width:clamp(360px,31vw,368px);--touch-pad-size:clamp(120px,calc(var(--app-viewport-height) - 516px),144px);--pad-hit-size:clamp(40px,calc(var(--touch-pad-size)/3),44px);--rail-controls-height:calc(var(--touch-pad-size) + 22px)}
+.tablet-cockpit #cockpitRail>.copilot.sat-compact{padding:6px}
+.tablet-cockpit #cockpitRail #satCards{gap:6px;justify-content:flex-start}
+.tablet-cockpit #cockpitRail .sat-section,.tablet-cockpit #cockpitRail .sat-section:has(.sat-task-flow){padding:4px 6px;border-left-width:3px}
+.tablet-cockpit #cockpitRail>.direction-console,.tablet-cockpit.very-short-cockpit #cockpitRail>.direction-console{width:268px;justify-self:end;grid-template-columns:94px minmax(0,1fr);grid-template-rows:14px minmax(0,1fr);gap:2px 10px;padding:3px;background:rgba(13,30,26,.55);border-color:#d6eee14a;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.tablet-cockpit #cockpitRail .altitude-controls{grid-template-columns:minmax(0,1fr) 20px;grid-template-rows:18px minmax(0,1fr) 16px;gap:3px;padding-right:8px;align-content:stretch}
+.tablet-cockpit #cockpitRail .altitude-controls>span:first-child{grid-column:1/3;font-size:13px}
+.tablet-cockpit #cockpitRail .altitude-controls>div{grid-column:1;grid-row:2;display:flex;flex-direction:column;justify-content:space-between;gap:2px}
+.tablet-cockpit #cockpitRail .altitude-controls button{width:100%;min-height:42px;padding:6px 2px;font-size:14px;touch-action:none}
+.tablet-cockpit #cockpitRail .altitude-controls output{font-size:14px;line-height:20px}
+.tablet-cockpit #cockpitRail .altitude-controls label{grid-column:2;grid-row:2;display:flex;align-items:center;justify-content:center;font-size:0;margin:0}
+.tablet-cockpit #cockpitRail .altitude-controls input{writing-mode:vertical-lr;direction:rtl;width:20px;min-width:20px;height:112px;margin:0;flex:none;accent-color:#b5f67b}
+.tablet-cockpit #cockpitRail #verticalStatus{grid-column:1/3;grid-row:3;text-align:left;font-size:11px;line-height:16px}
+.tablet-cockpit #cockpitRail .direction-head{font-size:12px;gap:4px}
+.tablet-cockpit #cockpitRail .direction-head span{font-size:12px}
+.tablet-cockpit #cockpitRail .direction-pad,.tablet-cockpit.very-short-cockpit #cockpitRail .direction-pad{width:var(--touch-pad-size);height:var(--touch-pad-size);background:radial-gradient(circle,#48604a 0 25%,#1c3428dc 26% 55%,#091b15d9 56%);border-color:#c9e4d08c}
+.tablet-cockpit #cockpitRail .direction-arrows button{width:var(--pad-hit-size);height:var(--pad-hit-size);font-size:18px}
+.tablet-cockpit #cockpitRail .dir-forward,.tablet-cockpit.very-short-cockpit #cockpitRail .dir-forward{left:calc(50% - var(--pad-hit-size)/2);top:1px}
+.tablet-cockpit #cockpitRail .dir-back,.tablet-cockpit.very-short-cockpit #cockpitRail .dir-back{left:calc(50% - var(--pad-hit-size)/2);bottom:1px}
+.tablet-cockpit #cockpitRail .dir-left,.tablet-cockpit.very-short-cockpit #cockpitRail .dir-left{left:1px;top:calc(50% - var(--pad-hit-size)/2)}
+.tablet-cockpit #cockpitRail .dir-right,.tablet-cockpit.very-short-cockpit #cockpitRail .dir-right{right:1px;top:calc(50% - var(--pad-hit-size)/2)}
+.tablet-cockpit #cockpitRail .joystick-knob{width:30px;height:30px;font-size:19px}
+
+/* Tighten spacing, not text size, when Safari leaves a short page area. */
+.tablet-cockpit.short-cockpit #cockpitRail>.copilot.sat-compact{padding:4px}
+.tablet-cockpit.short-cockpit #cockpitRail .section-head{margin-bottom:2px}
+.tablet-cockpit.short-cockpit #cockpitRail .sat-section,.tablet-cockpit.short-cockpit #cockpitRail .sat-section:has(.sat-task-flow){padding:1px 6px}
+.tablet-cockpit.short-cockpit #cockpitRail #satCards{gap:3px}
+.tablet-cockpit.short-cockpit #cockpitRail #decisionPanel{padding:2px}
+.tablet-cockpit.short-cockpit #cockpitRail .altitude-controls{grid-template-rows:16px minmax(0,1fr) 14px;gap:2px}
+.tablet-cockpit.short-cockpit #cockpitRail .altitude-controls button{min-height:40px;padding:4px 2px}
+.tablet-cockpit.short-cockpit #cockpitRail .altitude-controls output{font-size:14px;line-height:18px}
+.tablet-cockpit.short-cockpit #cockpitRail .altitude-controls input{height:100px}
+.tablet-cockpit.short-cockpit #cockpitRail #verticalStatus{line-height:14px}
+.tablet-cockpit.free-map-workspace #freeMapWorkspacePanel,.tablet-cockpit.sat-editing #editor{background:rgba(13,29,25,.66);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.tablet-cockpit.free-map-workspace .sat-compact #satCards{gap:6px}
