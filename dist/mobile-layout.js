@@ -11,6 +11,32 @@
   const setClass = (element, name, enabled) => {
     if (element.classList.contains(name) !== enabled) element.classList.toggle(name, enabled);
   };
+  const setSize = (name, value) => {
+    if (document.body.style.getPropertyValue(name) !== value) document.body.style.setProperty(name, value);
+  };
+  const fitRail = (width, tablet, workspace) => {
+    if (!tablet) {
+      for (const key of ['--rail-width', '--touch-pad-size', '--rail-controls-height', '--rail-card-gap']) document.body.style.removeProperty(key);
+      return;
+    }
+    if (workspace || document.body.classList.contains('sat-editing')) {
+      setSize('--rail-width', Math.min(368, Math.max(360, width * .31)) + 'px');
+      return;
+    }
+    // Both panels share an edge. Reserve only the height actually needed by the cards.
+    const available = rail.getBoundingClientRect().height;
+    setSize('--rail-card-gap', (available < 565 ? 4 : available < 650 ? 6 : 8) + 'px');
+    let railWidth = Math.round(Math.min(326, Math.max(310, width * .27)));
+    setSize('--rail-width', railWidth + 'px');
+    while (assistant && assistant.getBoundingClientRect().height + 150 > available && railWidth < 360) {
+      railWidth = Math.min(360, railWidth + 12);
+      setSize('--rail-width', railWidth + 'px');
+    }
+    const informationHeight = assistant?.getBoundingClientRect().height || 0;
+    const pad = Math.max(120, Math.floor(Math.min(200, railWidth - 112, available - informationHeight - 30)));
+    setSize('--touch-pad-size', pad + 'px');
+    setSize('--rail-controls-height', pad + 22 + 'px');
+  };
   const syncLayout = () => {
     queued = false;
     const viewport = window.visualViewport;
@@ -46,6 +72,7 @@
       if (controls?.parentElement === rail) document.body.append(controls);
     }
     setClass(rail, 'empty-assistant', !document.getElementById('satCards')?.childElementCount);
+    fitRail(width, tablet, workspace);
   };
   const queueLayout = () => {
     if (!queued) { queued = true; requestAnimationFrame(syncLayout); }
@@ -53,6 +80,7 @@
   new MutationObserver(queueLayout).observe(panel, { attributes: true, attributeFilter: ['hidden'] });
   new MutationObserver(queueLayout).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   new MutationObserver(queueLayout).observe(document.getElementById('satCards'), { childList: true });
+  if (assistant && window.ResizeObserver) new ResizeObserver(queueLayout).observe(assistant);
   window.addEventListener('resize', queueLayout, { passive: true });
   window.addEventListener('orientationchange', queueLayout, { passive: true });
   window.visualViewport?.addEventListener('resize', queueLayout, { passive: true });
