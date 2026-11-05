@@ -54,6 +54,8 @@
 
   function decisionPrompt(decision){
     const seconds=Number.isFinite(decision?.seconds)?Math.max(0,Math.ceil(decision.seconds)):null;
+    if(decision?.phase==='manual')return '手动接管 · 自动飞行已暂停';
+    if(decision?.phase==='paused')return '飞行已暂停';
     if(decision?.phase==='editing')return seconds===null?'请提交避让路线':'剩余'+seconds+'秒，请提交路线';
     if(decision?.phase==='decision')return seconds===null?'请在右侧选择避让方式':'请在'+seconds+'秒内决策 → 右侧';
     if(decision?.phase==='planning')return '正在准备避让方案';

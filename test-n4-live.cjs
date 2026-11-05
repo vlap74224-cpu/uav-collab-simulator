@@ -342,8 +342,26 @@ async function presentationRetryScenario() {
   console.log('PASS N4 aborted presentation retries and starts one decision clock');
 }
 
+
+async function manualResumeScenario(rate){
+ const h=harness(rate);await h.ready();h.context.n4Resolve('accept');await h.frame();
+ const before=pos(h);h.context.n4TakeManual();h.state.manualPosition={x:before.x+.4,y:before.y+.4,heading:before.heading};h.state.manualSpeed=0;h.state.status='manual';h.context.stopManual=()=>{h.state.manualSpeed=0;};h.context.render();
+ assert.equal(h.context.n4Pending(),false);assert.equal(h.node('accept').textContent,'恢复自动飞行');assert.equal(h.node('satState').textContent,'手动悬停');
+ const hover=pos(h),start=h.state.simTime,target=h.state.traffic.time;await h.frame();assert(h.state.simTime>start);assert(h.state.traffic.time>target);assert(distance(hover,pos(h))<.001);assert.equal(h.state.status,'manual');
+ const text=h.context.N4Status.describe({state:h.state,mission:h.mission,live:h.state.n4Snapshot}).flat(3).join(' ');assert(text.includes('手动接管'));assert(!text.includes('AI已自动开始避让'));
+ h.blockGeometry(true);assert.equal(h.context.n4ResumeAuto(),false);assert.equal(h.state.status,'manual');assert(distance(hover,pos(h))<.001);h.blockGeometry(false);
+ assert.equal(h.context.n4ResumeAuto(),true);assert.equal(h.state.status,'running');assert(distance(hover,pos(h))<.001,'resuming cannot teleport');assert(Math.hypot(h.state.route[0][0]-hover.x,h.state.route[0][1]-hover.y)<.001);await h.frame();assert(distance(hover,pos(h))>0);
+ const resumed=h.context.N4Status.describe({state:h.state,mission:h.mission,live:h.state.n4Snapshot}).flat(3).join(' ');assert(resumed.includes('已恢复自动飞行'));console.log('PASS deliberate manual hover, actual-position checked resume and consistent status',rate);
+}
+async function idleManualCollisionScenario(rate){
+ const h=harness(rate);await h.ready();const own=pos(h);h.context.n4TakeManual();h.state.status='manual';h.state.manualPosition={...own};h.state.manualSpeed=0;h.state.traffic={x:own.x-40,y:own.y,vx:9,vy:0,altitude:60,time:0};h.state.trafficMotionUpdated=true;const start=h.state.simTime;
+ await h.until(()=>h.state.status==='collision','moving target contacts a hovering manual aircraft',10);assert(h.state.simTime>start+3.9);const t=Traffic.position(h.state.traffic);assert(Math.abs(Math.hypot(t.x-own.x,t.y-own.y)-3)<.01);console.log('PASS manual idle clock advances and moving target collision remains active',rate);
+}
+
 (async () => {
   for (const rate of [1, 4, 8]) {
+    await manualResumeScenario(rate);
+    await idleManualCollisionScenario(rate);
     await acceptScenario(rate);
     await editingScenario(rate);
     await timeoutScenario(rate);

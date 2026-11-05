@@ -27,6 +27,20 @@ function describe({state:s,mission:m,live:l,draft:d,evidence:e}){
   L3=[['结果','停止显示到达与间隔预测'],['记录',executionHistory],['条件','本次事件状态以实际接触位置为准']];
   return pack(L1,L2,L3);
  }
+ if(phase==='manual'){
+  const manualSpeed=Number.isFinite(s.manualSpeed)?Math.max(0,s.manualSpeed):null;
+  const motion=manualSpeed===null?'手动速度信息待更新':manualSpeed>.05?`手动飞行 · 地速${fmt(manualSpeed)}m/s`:'本机悬停，等待操控';
+  L1=[['行动','手动接管，自动避让已暂停'],['目标',`目的地仍为${destination}`],['当前',motion]];
+  L2=[['控制','当前由操作者控制，未自动跟随原路线'],['间隔',Number.isFinite(current)?`飞行物当前间隔${fmt(current)}m／要求≥${fmt(N4Decision.config(m).threshold,0)}m`:'飞行物当前间隔尚未更新'],['恢复','恢复AI前需从当前位置重新检查接入段']];
+  L3=[['到达','当前无自动执行路线，暂不提供到达预测'],['原预测','原避让路线的到达预测已停止适用'],['局限','手动操控会改变运动；恢复AI后重新预测']];
+  return pack(L1,L2,L3);
+ }
+ if(phase==='paused'){
+  L1=[['行动','飞行已暂停，当前未执行自动避让'],['目标',`目的地仍为${destination}`],['继续','点击继续飞行后恢复已确认路线']];
+  L2=[['控制','本机与移动飞行物均暂停'],['路线',`保留${routeName}，尚未恢复运动`],['依据','当前显示暂停状态，不计作正在执行']];
+  L3=[['到达','暂停期间不显示到达倒计时'],['恢复','继续飞行后更新剩余时间与余电预测'],['局限','尚未确定的暂停时长不计入到达估计']];
+  return pack(L1,L2,L3);
+ }
  if(s.landed||s.landing){
   const emergency=s.n4Action==='emergency',landed=!!s.landed;
   L1=[['目标',emergency?'应急降落点':destination],['动作',landed?'已完成着陆':`正在下降 · 高度${fmt(s.altitude)}m`],['任务',emergency?'原任务已中断':`继续前往${destination}`]];
@@ -57,6 +71,12 @@ function describe({state:s,mission:m,live:l,draft:d,evidence:e}){
   L1=[['结果',`已到达${destination}，本段飞行结束`],['执行',`${routeName} · 实际飞行${seconds(s.simTime)}`],['状态','无待确认动作']];
   L2=[['最近间隔',Number.isFinite(s.trafficMinimum)?fmt(s.trafficMinimum)+'m':'暂不可预测'],['路线',constraints],['记录',executionHistory]];
   L3=[['预测核对',s.n4Execution?.risk?`执行前预计最近间隔${minGap(s.n4Execution.risk)}`:'无可核对的执行前预测'],['实际',`结束余电${percent(s.battery)}`],['局限','到达后停止显示未来预测']];
+  return pack(L1,L2,L3);
+ }
+ if(phase==='running'&&s.n4Decision?.source==='user_resume'){
+  L1=[['行动','已恢复自动飞行，沿检查后的路线继续'],['目标',`继续前往${destination} · ${routeName}`],['进展',`${progress} · 航迹偏差${deviation}`]];
+  L2=[['接入',s.n4Execution?.check?.valid?'从恢复位置重新检查建筑间隔通过':constraints],['动态',`当前路线预计${dynamic(l?.selected)}`],['依据','按恢复时的位置与飞行物运动状态复核']];
+  L3=[['到达',predictedArrival],['记录','本次由用户恢复自动执行'],['局限',conditions]];
   return pack(L1,L2,L3);
  }
  if(s.n4AvoidanceComplete){
