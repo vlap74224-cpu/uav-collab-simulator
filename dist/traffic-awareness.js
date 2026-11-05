@@ -52,7 +52,17 @@
     return horizontal+(Math.abs(elevation)>20?(elevation>0?' · 上方':' · 下方'):'');
   }
 
-  function layoutTarget({projection,viewport,obstacles=[],ringDiameter=42,labelSize={width:184,height:44},edgeSize={width:204,height:72}}){
+  function decisionPrompt(decision){
+    const seconds=Number.isFinite(decision?.seconds)?Math.max(0,Math.ceil(decision.seconds)):null;
+    if(decision?.phase==='editing')return seconds===null?'请提交避让路线':'剩余'+seconds+'秒，请提交路线';
+    if(decision?.phase==='decision')return seconds===null?'请在右侧选择避让方式':'请在'+seconds+'秒内决策 → 右侧';
+    if(decision?.phase==='planning')return '正在准备避让方案';
+    if(decision?.phase==='blocked')return '请在右侧重新选择避让方式';
+    if(decision?.phase==='executing')return decision.source==='timeout'?'AI已自动避让，继续观察':'正在执行所选避让方案';
+    return '请留意飞行物动向';
+  }
+
+  function layoutTarget({projection,viewport,obstacles=[],ringDiameter=38,labelSize={width:184,height:36},edgeSize={width:246,height:40}}){
     if(!projection||!Number.isFinite(projection.distance))return{mode:'hidden'};
     const p=projection,diameter=Math.max(38,ringDiameter),radius=diameter/2,usable=inset(viewport,8);
     const clear=box=>contains(usable,box)&&!obstacles.some(r=>overlaps(box,r));
@@ -77,8 +87,10 @@
     if(Math.hypot(dx,dy)<1e-6){dx=p.azimuth<0?-1:1;dy=0;}
     const rx=Math.max(0,(bounds.right-bounds.left-edgeSize.width)/2),ry=Math.max(0,(bounds.bottom-bounds.top-edgeSize.height)/2);
     const scale=Math.min(Math.abs(dx)>1e-9?rx/Math.abs(dx):Infinity,Math.abs(dy)>1e-9?ry/Math.abs(dy):Infinity);
+    // Keep an off-screen notice against the page edge, away from the central scene.
+    let edge=null;for(let y=usable.top;y+edgeSize.height<=usable.bottom&&!edge;y+=8){for(const x of [usable.left,usable.right-edgeSize.width]){const box=rect(x,y,edgeSize.width,edgeSize.height);if(clear(box)){edge=box;break;}}}
     const reason=p.behind?'相机后方':!p.inFrustum?'相机视角外':obstacles.some(r=>overlaps(ring,r))?'面板遮挡':'画面边缘';
-    return{mode:'edge',x:cx+dx*scale,y:cy+dy*scale,width:edgeSize.width,height:edgeSize.height,angle:Math.atan2(dy,dx)*degrees,direction:relativeDirection(p),reason,bounds,projection:p};
+    return{mode:'edge',x:edge?(edge.left+edge.right)/2:cx+dx*scale,y:edge?(edge.top+edge.bottom)/2:cy+dy*scale,width:edgeSize.width,height:edgeSize.height,angle:Math.atan2(dy,dx)*degrees,direction:relativeDirection(p),reason,bounds,projection:p};
   }
-  return{projectTarget,visibleSceneBounds,layoutTarget,relativeDirection};
+  return{projectTarget,visibleSceneBounds,layoutTarget,relativeDirection,decisionPrompt};
 });

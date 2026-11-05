@@ -3,14 +3,14 @@
 .traffic-target-ring{position:absolute;transform:translate(-50%,-50%);border:3px solid #ffae56;border-radius:50%;box-shadow:0 0 0 2px #13201fe6,0 0 14px #ff8b393d;background:#ff9d3014}
 .traffic-target-ring::before,.traffic-target-ring::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:2px;background:#fff2dc;box-shadow:0 1px 2px #000;transform:translate(-50%,-50%)}
 .traffic-target-ring::after{transform:translate(-50%,-50%) rotate(90deg)}
-.traffic-target-label,.traffic-target-edge{position:absolute;border:1px solid #ffb365;border-radius:7px;background:#14211ff2;color:#fff4df;box-shadow:0 2px 8px #0006;padding:5px 8px;font-size:11px;line-height:16px;white-space:nowrap}
-.traffic-target-label{width:184px;height:44px}
+.traffic-target-label,.traffic-target-edge{position:absolute;border:1px solid #ffb365a6;border-radius:5px;background:#14211fb0;color:#fff4df;box-shadow:0 1px 3px #0003;padding:3px 7px;font-size:11px;line-height:16px;white-space:nowrap}
+.traffic-target-label{width:184px;height:36px}
 .traffic-target-label strong,.traffic-target-edge strong{display:block;color:#ffc477;font-size:12px;line-height:16px}
 .traffic-target-label small,.traffic-target-edge small{font-size:10px;color:#f4e3ce;line-height:16px}
-.traffic-target-edge{width:204px;height:72px;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;padding:6px 8px}
-.traffic-target-arrow{display:block;flex:0 0 22px;text-align:center;font-size:23px;color:#ffbb6e;line-height:24px;transform:rotate(var(--target-angle,0deg))}
+.traffic-target-edge{width:246px;height:40px;transform:translate(-50%,-50%);display:flex;align-items:center;gap:7px;padding:3px 7px}
+.traffic-target-arrow{display:block;flex:0 0 18px;text-align:center;font-size:18px;color:#ffbb6e;line-height:20px;transform:rotate(var(--target-angle,0deg))}
 .traffic-target-edge-copy{min-width:0;display:block}
-.traffic-target-edge-copy>span{display:block;font-size:10px;line-height:16px}
+.traffic-target-edge-copy>span{display:block;font-size:12px;line-height:16px}
 .traffic-locate-button{border-color:#ffb36599;color:#ffd9a6;white-space:nowrap}
 body:is(.sat-editing,.free-map-workspace) .traffic-awareness{display:none}
 /* Map geometry stays in physical metres; the icon/outline scale is set by cockpit.js. */

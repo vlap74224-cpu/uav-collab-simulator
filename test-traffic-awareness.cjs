@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict');
-const {projectTarget,visibleSceneBounds,layoutTarget}=require('./dist/traffic-awareness.js');
+const {projectTarget,visibleSceneBounds,layoutTarget,decisionPrompt}=require('./dist/traffic-awareness.js');
 const viewport={left:0,top:0,right:1194,bottom:834};
 const camera={origin:{x:0,y:60,z:0},right:{x:1,y:0,z:0},up:{x:0,y:1,z:0},forward:{x:0,y:0,z:-1},fovY:60,aspect:1194/834,near:.8,far:2200,viewport};
 const project=(target,extra={})=>projectTarget({...camera,target,...extra});
@@ -14,7 +14,7 @@ assert.equal(frontHud.mode,'target');assert.equal(frontHud.x,597);assert.equal(f
 assert.equal(frontHud.diameter,38,'distant targets retain a minimum visible ring');
 assert.ok(!blocked.some(r=>intersects(frontHud.label,r)),'label avoids the actual panel bounds');
 const far=project({x:0,y:60,z:-1600}),farHud=layoutTarget({projection:far,viewport,obstacles:blocked});
-assert.equal(farHud.mode,'target');assert.equal(farHud.diameter,42);assert.equal(far.distance,1600);
+assert.equal(farHud.mode,'target');assert.equal(farHud.diameter,38);assert.equal(far.distance,1600);
 
 for(const target of [{x:0,y:60,z:500},{x:500,y:60,z:-100},{x:-500,y:60,z:-100},{x:0,y:560,z:-100},{x:0,y:-440,z:-100},{x:300,y:60,z:-500},{x:100,y:60,z:500},{x:-100,y:60,z:500}]){
   const p=project(target),layout=layoutTarget({projection:p,viewport,obstacles:blocked});
@@ -25,6 +25,9 @@ for(const target of [{x:0,y:60,z:500},{x:500,y:60,z:-100},{x:-500,y:60,z:-100},{
 const rear=project({x:0,y:60,z:500}),rearHud=layoutTarget({projection:rear,viewport,obstacles:blocked});
 assert.equal(rear.behind,true);assert.equal(rear.screenX,null);assert.equal(rear.inFrustum,false);
 assert.equal(rearHud.reason,'相机后方');assert.equal(rearHud.direction,'后方');assert.equal(rear.bearing,180);
+assert.equal(rearHud.width,246);assert.equal(rearHud.height,40,'offscreen notice stays two compact lines');
+assert.equal(edgeBox(rearHud).left,8,'notice uses outer viewport edge instead of central sight');
+assert.ok(edgeBox(rearHud).bottom<100,'notice fits below the top bar');
 const above=project({x:0,y:560,z:0}),aboveHud=layoutTarget({projection:above,viewport,obstacles:blocked});
 assert.equal(above.behind,false);assert.equal(aboveHud.reason,'相机视角外');assert.equal(aboveHud.angle,-90);
 const underRail=project({x:300,y:60,z:-500}),underRailHud=layoutTarget({projection:underRail,viewport,obstacles:blocked});
@@ -32,6 +35,12 @@ assert.equal(underRail.inFrustum,true);assert.equal(underRailHud.reason,'面板�
 assert.notEqual(underRailHud.x,underRail.screenX,'a panel-covered target must not be falsely pinned to an in-scene location');
 assert.equal(layoutTarget({projection:rear,viewport,obstacles:[viewport]}).mode,'hidden','never overlap a full-screen map');
 assert.equal(visibleSceneBounds({left:0,top:0,right:100,bottom:80}),null);
+assert.equal(decisionPrompt({phase:'decision',seconds:11.2}),'请在12秒内决策 → 右侧');
+assert.equal(decisionPrompt({phase:'editing',seconds:8}),'剩余8秒，请提交路线');
+assert.equal(decisionPrompt({phase:'planning'}),'正在准备避让方案');
+assert.equal(decisionPrompt({phase:'decision'}),'请在右侧选择避让方式','missing time must not become a fabricated zero');
+assert.equal(decisionPrompt({phase:'executing',source:'timeout'}),'AI已自动避让，继续观察');
+assert.equal(decisionPrompt({phase:'executing',source:'user_accept'}),'正在执行所选避让方案');
 
 // Numeric basis agrees with a downward pitched and yawed camera, without Three.js.
 const yaw=Math.PI/4,pitch=38*Math.PI/180;

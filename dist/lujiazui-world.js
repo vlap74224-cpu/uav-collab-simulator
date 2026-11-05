@@ -60,10 +60,10 @@ try{
  const traffic=new T.Group();for(const angle of [0,Math.PI/2]){const arm=new T.Mesh(new T.BoxGeometry(2.6,.25,.25),new T.MeshStandardMaterial({color:'#ff6c35'}));arm.rotation.y=angle;traffic.add(arm)}traffic.add(new T.Mesh(new T.SphereGeometry(.5,12,8),new T.MeshStandardMaterial({color:'#ff9d60'})));scene.add(traffic);traffic.visible=false;
  // A screen-space cue preserves the physical 2.6 m target and its collision body.
  // It marks the target's reported position even when scene geometry hides the mesh.
- const trafficHud=document.createElement('section');trafficHud.className='traffic-awareness';trafficHud.hidden=true;trafficHud.setAttribute('aria-label','T1 移动目标位置');trafficHud.innerHTML='<div class="traffic-target-ring" hidden aria-hidden="true"></div><div class="traffic-target-label" hidden><strong></strong><small></small></div><div class="traffic-target-edge" hidden><span class="traffic-target-arrow" aria-hidden="true">➤</span><span class="traffic-target-edge-copy"><strong></strong><span></span><small></small></span></div>';document.body.append(trafficHud);
+ const trafficHud=document.createElement('section');trafficHud.className='traffic-awareness';trafficHud.hidden=true;trafficHud.setAttribute('aria-label','移动飞行物位置');trafficHud.innerHTML='<div class="traffic-target-ring" hidden aria-hidden="true"></div><div class="traffic-target-label" hidden><strong></strong><small></small></div><div class="traffic-target-edge" hidden><span class="traffic-target-arrow" aria-hidden="true">➤</span><span class="traffic-target-edge-copy"><strong></strong><span></span></span></div>';document.body.append(trafficHud);
  const trafficRing=trafficHud.querySelector('.traffic-target-ring'),trafficLabel=trafficHud.querySelector('.traffic-target-label'),trafficEdge=trafficHud.querySelector('.traffic-target-edge');
  const legacyTrafficMarker=document.getElementById('trafficMarker');if(legacyTrafficMarker)legacyTrafficMarker.hidden=true;
- const locateTraffic=document.createElement('button');locateTraffic.className='traffic-locate-button';locateTraffic.type='button';locateTraffic.textContent='定位 T1';locateTraffic.title='将镜头转向 T1 当前实际位置';locateTraffic.hidden=true;
+ const locateTraffic=document.createElement('button');locateTraffic.className='traffic-locate-button';locateTraffic.type='button';locateTraffic.textContent='定位飞行物';locateTraffic.title='将镜头转向移动飞行物的当前位置';locateTraffic.hidden=true;
  function focusTraffic(){
   if(!state.traffic)return false;
   const delta=vector(state.traffic).sub(vector(state)),yaw=Math.atan2(delta.x,-delta.z)*180/Math.PI;
@@ -75,8 +75,8 @@ try{
  const trafficBlockerSelectors='#cockpitRail,.copilot,.minimap,.map-steering,.direction-console,footer,.topbar,.camera-strip,.camera-tools,#destinationPanel,#trafficReadout,#editor,#freeMapWorkspacePanel';
  const copyRect=r=>({left:r.left,top:r.top,right:r.right,bottom:r.bottom});
  function updateTrafficHud(now,dronePosition){
-  const awareness=window.TrafficAwareness;locateTraffic.hidden=!state.traffic;
-  if(!state.traffic||!awareness){trafficHud.hidden=true;return;}
+  const awareness=window.TrafficAwareness,ended=['complete','collision'].includes(state.status);locateTraffic.hidden=!state.traffic||ended;
+  if(!state.traffic||!awareness||ended){trafficHud.hidden=true;return;}
   if(now>=nextTrafficMeasure){
    nextTrafficMeasure=now+150;trafficSceneViewport=copyRect(renderer.domElement.getBoundingClientRect());
    const vv=window.visualViewport;if(vv&&Math.abs(vv.scale-1)<.02){trafficSceneViewport.left=Math.max(trafficSceneViewport.left,vv.offsetLeft);trafficSceneViewport.top=Math.max(trafficSceneViewport.top,vv.offsetTop);trafficSceneViewport.right=Math.min(trafficSceneViewport.right,vv.offsetLeft+vv.width);trafficSceneViewport.bottom=Math.min(trafficSceneViewport.bottom,vv.offsetTop+vv.height);}
@@ -86,12 +86,12 @@ try{
   const elements=camera.matrixWorld.elements,projection=awareness.projectTarget({target:traffic.position,origin:camera.position,referenceOrigin:dronePosition,right:{x:elements[0],y:elements[1],z:elements[2]},up:{x:elements[4],y:elements[5],z:elements[6]},forward:{x:-elements[8],y:-elements[9],z:-elements[10]},fovY:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far,viewport:{left:0,top:0,right:innerWidth,bottom:innerHeight}});
   const layout=awareness.layoutTarget({projection,viewport:trafficSceneViewport,obstacles:trafficSceneObstacles});
   trafficHud.hidden=layout.mode==='hidden';trafficHud.dataset.mode=layout.mode;trafficRing.hidden=trafficLabel.hidden=layout.mode!=='target';trafficEdge.hidden=layout.mode!=='edge';
-  const distance=projection.distance.toFixed(0)+' m',bearing=String(Math.round(projection.bearing)%360).padStart(3,'0')+'°';
-  trafficHud.setAttribute('aria-label',`T1 · 中心距 ${distance} · 方位 ${bearing}${layout.mode==='edge'?' · 视野外 · '+layout.direction:' · 目标位置'}`);
+  const distance=projection.distance.toFixed(0)+' m',bearing=String(Math.round(projection.bearing)%360).padStart(3,'0')+'°',prompt=awareness.decisionPrompt(state.trafficDecision);
+  trafficHud.setAttribute('aria-label',`移动飞行物 · 中心距 ${distance} · 方位 ${bearing}${layout.mode==='edge'?' · 视野外 · '+layout.direction:' · 目标位置'}`);
   if(layout.mode==='target'){
-   trafficRing.style.left=layout.x+'px';trafficRing.style.top=layout.y+'px';trafficRing.style.width=trafficRing.style.height=layout.diameter+'px';trafficLabel.style.left=layout.label.left+'px';trafficLabel.style.top=layout.label.top+'px';trafficLabel.querySelector('strong').textContent='T1 · 中心距 '+distance;trafficLabel.querySelector('small').textContent='目标位置 · 方位 '+bearing;
+   trafficRing.style.left=layout.x+'px';trafficRing.style.top=layout.y+'px';trafficRing.style.width=trafficRing.style.height=layout.diameter+'px';trafficLabel.style.left=layout.label.left+'px';trafficLabel.style.top=layout.label.top+'px';trafficLabel.querySelector('strong').textContent='移动飞行物 · '+distance;trafficLabel.querySelector('small').textContent=prompt;
   }else if(layout.mode==='edge'){
-   trafficEdge.style.left=layout.x+'px';trafficEdge.style.top=layout.y+'px';trafficEdge.style.setProperty('--target-angle',layout.angle+'deg');trafficEdge.querySelector('strong').textContent='T1 · 视野外 · 中心距 '+distance;trafficEdge.querySelector('.traffic-target-edge-copy>span').textContent=layout.direction+' · '+layout.reason;trafficEdge.querySelector('small').textContent='目标方位 '+bearing+' · 方向提示';
+   trafficEdge.style.left=layout.x+'px';trafficEdge.style.top=layout.y+'px';trafficEdge.style.setProperty('--target-angle',layout.angle+'deg');trafficEdge.querySelector('strong').textContent='移动飞行物 · '+layout.direction+' · '+distance;trafficEdge.querySelector('.traffic-target-edge-copy>span').textContent=prompt;
   }
  }
  addEventListener('resize',()=>nextTrafficMeasure=0);window.visualViewport?.addEventListener('resize',()=>nextTrafficMeasure=0);window.visualViewport?.addEventListener('scroll',()=>nextTrafficMeasure=0);
