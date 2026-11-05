@@ -8,6 +8,16 @@ function create(a,b,speed=12,route=null){
  const crossTime=total*progress/speed;return{x:mid.x-v.x*crossTime,y:mid.y-v.y*crossTime,vx:v.x,vy:v.y,altitude:60,time:0,crossTime,alertAfter,crossProgress:progress,straightStart,straightEnd,collisionPoint:{x:mid.x,y:mid.y}};
 }
 function position(t,offset=0){return{x:t.x+t.vx*(t.time+offset),y:t.y+t.vy*(t.time+offset),altitude:t.altitude};}
+// N4 reveals a real moving target only after the aircraft has turned onto
+// the long approach. Keep the other aircraft on that same forward corridor,
+// with the meeting near its far end rather than before the turn.
+function createN4(a,b,speed=12,route=null){
+ const path=Array.isArray(route)&&route.length>3?route:null;if(!path)return create(a,b,speed,route);
+ const total=C.length(path);let walked=0,best=null;for(let i=1;i<path.length-1;i++){const dx=path[i][0]-path[i-1][0],dy=path[i][1]-path[i-1][1],length=Math.hypot(dx,dy);if(length>0&&(!best||length>best.length))best={i,dx,dy,length,start:walked};walked+=length;}
+ if(!best)return create(a,b,speed,route);
+ const settleSeconds=2,revealAfter=best.start/speed+settleSeconds,crossDistance=best.start+best.length*.98,crossTime=crossDistance/speed,cross=C.sample(path,crossDistance/total),vx=-best.dx/best.length*9,vy=-best.dy/best.length*9;
+ return{x:cross.x-vx*crossTime,y:cross.y-vy*crossTime,vx,vy,altitude:60,time:0,crossTime,alertAfter:revealAfter+1,revealAfter,crossProgress:crossDistance/total,straightStart:best.start/total,straightEnd:(best.start+best.length)/total,collisionPoint:{x:cross.x,y:cross.y},encounterRevision:'n4-visible-straight-v10'};
+}
 function changeMotion(t,vx,vy,altitude=t.altitude){const p=position(t);return {...t,x:p.x-vx*t.time,y:p.y-vy*t.time,vx,vy,altitude};}
 function remainingRoute(route,progress){const p=C.sample(route,progress),head=[p.x,p.y],tail=C.clone(route.slice(p.next));if(tail.length&&Math.hypot(tail[0][0]-head[0],tail[0][1]-head[1])<1e-6)tail.shift();return[head,...tail];}
 function collisionCourse(route,speed,altitude,traffic){
@@ -24,5 +34,5 @@ function collisionCourse(route,speed,altitude,traffic){
  const reset=create(route[0],route.at(-1),speed,route);reset.altitude=altitude;reset.collisionPoint=C.sample(route,.5);reset.restarted=true;return reset;
 }
 function predict(route,progress,speed,altitude,t,horizon=30){const len=C.length(route),start=len*progress,remaining=(len-start)/speed;let distance=Infinity,seconds=0;for(let sec=0;sec<=Math.min(horizon,remaining)+.001;sec+=.1){const a=C.sample(route,Math.min(1,(start+speed*sec)/len)),b=position(t,sec),d=Math.hypot(a.x-b.x,a.y-b.y,altitude-t.altitude);if(d<distance){distance=d;seconds=sec}}return{distance,seconds,conflict:distance<40};}
-const api={create,position,predict,remainingRoute,collisionCourse,changeMotion};if(typeof module!=='undefined')module.exports=api;else root.Traffic=api;
+const api={create,createN4,position,predict,remainingRoute,collisionCourse,changeMotion};if(typeof module!=='undefined')module.exports=api;else root.Traffic=api;
 })(typeof window!=='undefined'?window:globalThis);

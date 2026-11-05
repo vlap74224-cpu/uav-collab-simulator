@@ -30,11 +30,11 @@ const integration = [
 function harness(rate = 1) {
   let wall = 0;
   const mission = Sequence.make(2, Sequence.points[2].point, 82);
-  const route = C.clone(mission.route);
+  const route = C.clone(mission.route), cruise = mission.cruiseSpeed || 12;
   const state = {
     status: 'running', route, progress: 0, altitude: 60, targetAltitude: 60,
-    speed: 12, battery: 82, simTime: 0, simRate: rate, trail: [route[0]],
-    traffic: Traffic.create(route[0], mission.destination.point, 12, route),
+    speed: cruise, battery: 82, simTime: 0, simRate: rate, trail: [route[0]],
+    traffic: Traffic.createN4(route[0], mission.destination.point, cruise, route),
   };
   const nodes = new Map(), events = [], frames = [];
   let geometryBlocked = false, geometryMissing = false, checks = 0, renders = 0, routeDraws = 0;
@@ -271,7 +271,7 @@ async function stablePanelScenario(rate) {
     h.advanceWallOnly(501); await h.flush();
     const token = h.state[field], own = pos(h), renders = h.renderCount(), draws = h.routeDrawCount();
     assert(token?.valid && !token.pending, field + ' starts with a completed scan');
-    for (let i = 0; i < Math.ceil(2 * 60 / rate); i++) {
+    for (let i = 0; i < Math.ceil(2.2 * 60 / rate); i++) {
       await h.frame();
       assert.equal(h.state[field], token, field + ' must survive movement of the live origin');
       assert.equal(h.state.n4Snapshot.check.pending, false, 'normal movement must not restart building scans');
@@ -309,7 +309,7 @@ async function unsafeDraftKeepsCandidateScenario(rate) {
   h.state.traffic = Traffic.changeMotion(t, t.vx * 1.0001, t.vy * 1.0001);
   assert(h.context.n4Prediction(h.context.n4Candidate()).distance >= h.context.N4Decision.config(h.mission).planningClearance);
   h.context.n4Reassess();
-  for (let i = 0; i < Math.ceil(2 * 60 / rate); i++) await h.frame();
+  for (let i = 0; i < Math.ceil(2.2 * 60 / rate); i++) await h.frame();
   assert.equal(h.mission.n4Plan, plan, 'an unsafe unsubmitted C must not replace a safe B');
   assert.equal(h.state.n4Planning, false);
   assert.equal(h.state.n4Decision, decision);
