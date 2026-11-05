@@ -58,6 +58,43 @@ try{
  notice.textContent='正在建立全场景碰撞结构…';await new Promise(resolve=>setTimeout(resolve,30));
  const meshes=[];for(const model of models){model.scene.updateMatrixWorld(true);model.scene.traverse(mesh=>{if(mesh.isMesh)meshes.push(mesh)});}let sliceStart=performance.now(),built=0;for(const mesh of meshes){const geometry=mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);geometry.computeBoundingBox();const name=mesh.name;const label=name.includes('_tree_')?(name.includes('trunk')?'树干':'树冠'):name.includes('slope')?'缓坡':name.startsWith('source_1227')?'湖面（触水）':geometry.boundingBox.max.y>5?'建筑':'地面';colliders.push({bvh:new MeshBVH(geometry,{maxLeafTris:12}),box:geometry.boundingBox.clone(),label});built++;if(performance.now()-sliceStart>24){notice.textContent=`正在准备飞行环境 ${built}/${meshes.length}`;await new Promise(resolve=>setTimeout(resolve,0));sliceStart=performance.now();}}
  const traffic=new T.Group();for(const angle of [0,Math.PI/2]){const arm=new T.Mesh(new T.BoxGeometry(2.6,.25,.25),new T.MeshStandardMaterial({color:'#ff6c35'}));arm.rotation.y=angle;traffic.add(arm)}traffic.add(new T.Mesh(new T.SphereGeometry(.5,12,8),new T.MeshStandardMaterial({color:'#ff9d60'})));scene.add(traffic);traffic.visible=false;
+ // A screen-space cue preserves the physical 2.6 m target and its collision body.
+ // It marks the target's reported position even when scene geometry hides the mesh.
+ const trafficHud=document.createElement('section');trafficHud.className='traffic-awareness';trafficHud.hidden=true;trafficHud.setAttribute('aria-label','T1 移动目标位置');trafficHud.innerHTML='<div class="traffic-target-ring" hidden aria-hidden="true"></div><div class="traffic-target-label" hidden><strong></strong><small></small></div><div class="traffic-target-edge" hidden><span class="traffic-target-arrow" aria-hidden="true">➤</span><span class="traffic-target-edge-copy"><strong></strong><span></span><small></small></span></div>';document.body.append(trafficHud);
+ const trafficRing=trafficHud.querySelector('.traffic-target-ring'),trafficLabel=trafficHud.querySelector('.traffic-target-label'),trafficEdge=trafficHud.querySelector('.traffic-target-edge');
+ const legacyTrafficMarker=document.getElementById('trafficMarker');if(legacyTrafficMarker)legacyTrafficMarker.hidden=true;
+ const locateTraffic=document.createElement('button');locateTraffic.className='traffic-locate-button';locateTraffic.type='button';locateTraffic.textContent='定位 T1';locateTraffic.title='将镜头转向 T1 当前实际位置';locateTraffic.hidden=true;
+ function focusTraffic(){
+  if(!state.traffic)return false;
+  const delta=vector(state.traffic).sub(vector(state)),yaw=Math.atan2(delta.x,-delta.z)*180/Math.PI;
+  overview=false;viewButton.textContent='三维地图总览';cameraHeading=null;cameraPitch=null;
+  setCamera({yawOffset:yaw-state.heading,pitch:Math.atan2(-delta.y,Math.hypot(delta.x,delta.z))*180/Math.PI,source:'locate-traffic',final:true},true);return true;
+ }
+ locateTraffic.onclick=focusTraffic;document.querySelector('.camera-strip').append(locateTraffic);
+ let trafficSceneViewport=null,trafficSceneObstacles=[],nextTrafficMeasure=0;
+ const trafficBlockerSelectors='#cockpitRail,.copilot,.minimap,.map-steering,.direction-console,footer,.topbar,.camera-strip,.camera-tools,#destinationPanel,#trafficReadout,#editor,#freeMapWorkspacePanel';
+ const copyRect=r=>({left:r.left,top:r.top,right:r.right,bottom:r.bottom});
+ function updateTrafficHud(now,dronePosition){
+  const awareness=window.TrafficAwareness;locateTraffic.hidden=!state.traffic;
+  if(!state.traffic||!awareness){trafficHud.hidden=true;return;}
+  if(now>=nextTrafficMeasure){
+   nextTrafficMeasure=now+150;trafficSceneViewport=copyRect(renderer.domElement.getBoundingClientRect());
+   const vv=window.visualViewport;if(vv&&Math.abs(vv.scale-1)<.02){trafficSceneViewport.left=Math.max(trafficSceneViewport.left,vv.offsetLeft);trafficSceneViewport.top=Math.max(trafficSceneViewport.top,vv.offsetTop);trafficSceneViewport.right=Math.min(trafficSceneViewport.right,vv.offsetLeft+vv.width);trafficSceneViewport.bottom=Math.min(trafficSceneViewport.bottom,vv.offsetTop+vv.height);}
+   trafficSceneObstacles=Array.from(document.querySelectorAll(trafficBlockerSelectors)).filter(el=>{const style=getComputedStyle(el);return style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)!==0;}).map(el=>copyRect(el.getBoundingClientRect())).filter(r=>r.right>r.left&&r.bottom>r.top);
+  }
+  // Projection uses the canvas viewport; the HUD layout uses the visible viewport.
+  const elements=camera.matrixWorld.elements,projection=awareness.projectTarget({target:traffic.position,origin:camera.position,referenceOrigin:dronePosition,right:{x:elements[0],y:elements[1],z:elements[2]},up:{x:elements[4],y:elements[5],z:elements[6]},forward:{x:-elements[8],y:-elements[9],z:-elements[10]},fovY:camera.fov,aspect:camera.aspect,near:camera.near,far:camera.far,viewport:{left:0,top:0,right:innerWidth,bottom:innerHeight}});
+  const layout=awareness.layoutTarget({projection,viewport:trafficSceneViewport,obstacles:trafficSceneObstacles});
+  trafficHud.hidden=layout.mode==='hidden';trafficHud.dataset.mode=layout.mode;trafficRing.hidden=trafficLabel.hidden=layout.mode!=='target';trafficEdge.hidden=layout.mode!=='edge';
+  const distance=projection.distance.toFixed(0)+' m',bearing=String(Math.round(projection.bearing)%360).padStart(3,'0')+'°';
+  trafficHud.setAttribute('aria-label',`T1 · 中心距 ${distance} · 方位 ${bearing}${layout.mode==='edge'?' · 视野外 · '+layout.direction:' · 目标位置'}`);
+  if(layout.mode==='target'){
+   trafficRing.style.left=layout.x+'px';trafficRing.style.top=layout.y+'px';trafficRing.style.width=trafficRing.style.height=layout.diameter+'px';trafficLabel.style.left=layout.label.left+'px';trafficLabel.style.top=layout.label.top+'px';trafficLabel.querySelector('strong').textContent='T1 · 中心距 '+distance;trafficLabel.querySelector('small').textContent='目标位置 · 方位 '+bearing;
+  }else if(layout.mode==='edge'){
+   trafficEdge.style.left=layout.x+'px';trafficEdge.style.top=layout.y+'px';trafficEdge.style.setProperty('--target-angle',layout.angle+'deg');trafficEdge.querySelector('strong').textContent='T1 · 视野外 · 中心距 '+distance;trafficEdge.querySelector('.traffic-target-edge-copy>span').textContent=layout.direction+' · '+layout.reason;trafficEdge.querySelector('small').textContent='目标方位 '+bearing+' · 方向提示';
+  }
+ }
+ addEventListener('resize',()=>nextTrafficMeasure=0);window.visualViewport?.addEventListener('resize',()=>nextTrafficMeasure=0);window.visualViewport?.addEventListener('scroll',()=>nextTrafficMeasure=0);
  const noFlyVolume=new T.Group(),noFlyWall=new T.Mesh(new T.CylinderGeometry(1,1,150,64,1,true),new T.MeshBasicMaterial({color:'#ff3d35',transparent:true,opacity:.16,side:T.DoubleSide,depthWrite:false}));noFlyVolume.add(noFlyWall);for(const y of [-75,75]){const ring=new T.Mesh(new T.TorusGeometry(1,.025,8,64),new T.MeshBasicMaterial({color:'#ff665d',transparent:true,opacity:.85,depthWrite:false}));ring.rotation.x=Math.PI/2;ring.position.y=y;noFlyVolume.add(ring)}scene.add(noFlyVolume);noFlyVolume.visible=false;
  window.worldCollision=(a,b)=>{
   const pa=vector(a),pb=vector(b),segment=new T.Line3(pa,pb),box=new T.Box3().setFromPoints([pa,pb]).expandByScalar(radius);let best=null;
@@ -87,7 +124,7 @@ try{
  const flightSpeed=()=>state.status==='manual'?Math.max(0,state.manualSpeed||0):Math.max(0,state.speed||0);
  window.UAVSafetyBoundary={horizontalLimits,verticalLimits,reference:'DJI Mavic 3E/3M'};
  const viewButton=document.createElement('button');viewButton.textContent='三维地图总览';viewButton.onclick=()=>{overview=!overview;viewButton.textContent=overview?'返回机载视角':'三维地图总览'};document.querySelector('.camera-strip').append(viewButton);
- window.flightView={update:s=>state=s,pitch:v=>setCamera({pitch:v}),setCamera,nudgeCamera:(yawDelta=0,pitchDelta=0)=>setCamera({yawOffset:cameraYawOffset+Number(yawDelta),pitch:pitch+Number(pitchDelta),source:'button'},true),getCamera:cameraPose,capture:()=>renderer.domElement.toDataURL('image/png')};
+ window.flightView={update:s=>state=s,pitch:v=>setCamera({pitch:v}),setCamera,nudgeCamera:(yawDelta=0,pitchDelta=0)=>setCamera({yawOffset:cameraYawOffset+Number(yawDelta),pitch:pitch+Number(pitchDelta),source:'button'},true),getCamera:cameraPose,focusTraffic,capture:()=>renderer.domElement.toDataURL('image/png')};
  renderer.domElement.addEventListener('pointerdown',e=>{if((state.status!=='photo'&&!state.freeFlight)||e.button!==0||overview)return;e.preventDefault();viewDrag={id:e.pointerId,x:e.clientX,y:e.clientY,start:cameraPose()};renderer.domElement.setPointerCapture(e.pointerId);renderer.domElement.classList.add('camera-dragging')});
  renderer.domElement.addEventListener('pointermove',e=>{if(viewDrag?.id!==e.pointerId)return;e.preventDefault();setCamera({yawOffset:viewDrag.start.yawOffset-(e.clientX-viewDrag.x)*.22,pitch:viewDrag.start.pitch-(e.clientY-viewDrag.y)*.16,source:'drag'},true)});
  function endViewDrag(e){if(viewDrag?.id!==e.pointerId)return;setCamera({...cameraPose(),final:true,source:'drag'},true);viewDrag=null;renderer.domElement.classList.remove('camera-dragging')}
@@ -97,7 +134,7 @@ try{
   cameraPitch=cameraPitch===null?targetPitch:FlightControls.smoothHeading(cameraPitch,targetPitch,dt,60,4);
   if(overview){camera.position.set(680,670,820);camera.lookAt(0,20,0)}else{camera.position.copy(pos);const p=cameraPitch;camera.lookAt(pos.clone().add(new T.Vector3(Math.sin(heading)*Math.cos(p),-Math.sin(p),-Math.cos(heading)*Math.cos(p))))}
   camera.updateMatrixWorld();
-  traffic.visible=!!state.traffic;if(state.traffic)traffic.position.copy(vector(state.traffic));const zone=state.noFlyZone;noFlyVolume.visible=!!zone;if(zone){const r=zone.r+zone.margin;noFlyVolume.position.copy(vector({x:zone.x,y:zone.y,z:75}));noFlyVolume.scale.set(r,1,r)}document.getElementById('trafficMarker').hidden=true;
+  traffic.visible=!!state.traffic;if(state.traffic)traffic.position.copy(vector(state.traffic));const zone=state.noFlyZone;noFlyVolume.visible=!!zone;if(zone){const r=zone.r+zone.margin;noFlyVolume.position.copy(vector({x:zone.x,y:zone.y,z:75}));noFlyVolume.scale.set(r,1,r)}updateTrafficHud(now,pos);
   if(now-lastProbe>200){lastProbe=now;const horizontal=horizontalLimits(flightSpeed()),vertical=verticalLimits(state.verticalSpeed),conservative={danger:Math.max(horizontal.danger,vertical.danger),warning:Math.max(horizontal.warning,vertical.warning)};panel.querySelector('.proximity-boundary').textContent=`制动 ${horizontal.danger.toFixed(1)} · 预警 ${horizontal.warning.toFixed(1)}`;panel.title=`Mavic 3E/3M 参考边界｜水平速度 ${flightSpeed().toFixed(1)} m/s｜红色 ≤ ${horizontal.danger.toFixed(1)} m｜橙色 ≤ ${horizontal.warning.toFixed(1)} m｜绿色 > ${horizontal.warning.toFixed(1)} m`;closest=nearest(pos);const read=panel.querySelector('.closest-reading');if(closest){const d=Math.max(0,closest.distance-radius);read.textContent=state.landed?`已着陆 · ${closest.label}`:`最近${closest.label} ${d.toFixed(1)} m`;read.dataset.tone=state.landed?'normal':tone(d,conservative)}
    [0,90,180,270,'up','down'].forEach((angle,i)=>{const a=heading+(Number(angle)||0)*Math.PI/180,direction=i<4?new T.Vector3(Math.sin(a),0,-Math.cos(a)):new T.Vector3(0,i===4?1:-1,0),h=rayDistance(pos,direction),d=h?Math.max(0,h.distance-radius):Infinity,limits=i<4?horizontal:vertical;rows[i].querySelector('b').textContent=state.landed&&i===5?'已接地':h?d.toFixed(1):'>200';rows[i].dataset.tone=state.landed&&i===5?'normal':h?tone(d,limits):'normal'});
    const readTraffic=panel.querySelector('.proximity-target');if(state.traffic){const d=Math.max(0,pos.distanceTo(vector(state.traffic))-radius*2),relativeSpeed=flightSpeed()+Math.hypot(state.traffic.vx||0,state.traffic.vy||0),trafficLimits=horizontalLimits(relativeSpeed);readTraffic.textContent='机体净距 '+d.toFixed(1)+' m';readTraffic.dataset.tone=tone(d,trafficLimits);readTraffic.title=`此处为机体表面净距；AI面板为中心间隔。相对闭合速度按 ${relativeSpeed.toFixed(1)} m/s 保守估计`}else{readTraffic.textContent='移动目标：无';readTraffic.dataset.tone='unknown';readTraffic.title=''};
