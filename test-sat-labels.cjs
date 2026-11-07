@@ -7,7 +7,7 @@ const Photo=require('./dist/photo-mission'),N2=require('./dist/n2-status');
 global.N4Decision=require('./dist/n4-decision');
 const N4=require('./dist/n4-status'),Resource=require('./dist/resource-status');
 const headings={action:'L1 当前目标与行动',reason:'L2 决策依据与约束',projection:'L3 预期结果与局限'};
-const allowed={action:['目标','计划','状态'],reason:['依据','检查','约束'],projection:['预测','局限','表现']};
+const allowed=Labels.vocabulary;
 let verified=0;
 function check(name,raw,options={}){
  const before=JSON.stringify(raw),result=Labels.normalize(raw,options);
@@ -16,8 +16,12 @@ function check(name,raw,options={}){
   assert.equal(result[i][0],key,name+': preserve the SAT level key');
   assert.equal(result[i][1],headings[key],name+': stable level title');
   assert.equal(result[i][2].length,items.length,name+': no new, removed or merged rows');
+  const visible=result[i][2].filter(([,value])=>typeof value!=='object').map(([label])=>label);
+  assert.equal(new Set(visible).size,visible.length,name+': no repeated visible '+key+' row labels: '+visible.join('/'));
   items.forEach((item,j)=>{
    assert(allowed[key].includes(result[i][2][j][0]),name+': canonical '+key+' label for '+item[0]);
+   assert(result[i][2][j][0].trim()&&!/\d/.test(result[i][2][j][0]),name+': meaningful labels, not blank or numbered placeholders');
+   assert.equal([...result[i][2][j][0]].length,2,name+': preserve the existing two-character label column');
    assert.strictEqual(result[i][2][j][1],item[1],name+': preserve the exact value/reference and row position');
   });
  });
@@ -31,15 +35,32 @@ function row(levels,key,original,index=0){return levels.find(x=>x[0]===key)[2].f
 const flow={kind:'photo-flow',steps:[{id:'a',name:'震旦大厦',state:'current'}]},comparison={original:'0.5 m',suggested:'48.3 m',label:'建议方案B'};
 const mixed=[['action','旧标题',[['目标','C点'],['路线','当前位置→绕行点→C'],['进展','剩余350m']]],['reason','旧标题',[['顺序','按任务配置顺序'],['检查','第1–6段未穿已知禁区'],['建筑','净距24.1m / 要求≥21.8m'],['依据','当前航段满足通行要求']]],['projection','旧标题',[['抵达','91秒至C · 余电80.2%'],['记录','此前已完成2段飞行'],['局限','未计风况']]]];
 const canonical=check('mixed N1/N2 row order',mixed);
-assert.deepEqual(canonical[0][2].map(x=>x[0]),['目标','计划','状态']);
-assert.deepEqual(canonical[1][2].map(x=>x[0]),['依据','检查','约束','依据']);
-assert.deepEqual(canonical[2][2].map(x=>x[0]),['预测','表现','局限']);
+assert.equal(canonical[0][2][0][0],'目标');
+assert.equal(canonical[0][2][1][0],'航线');
+assert.equal(canonical[2][2][0][0],'预测');
+assert.equal(canonical[2][2][1][0],'表现');
+assert.equal(canonical[2][2][2][0],'局限');
 check('preserve flow and comparison objects',[['action','L1',[['任务',flow],['打卡','已打卡0/4'],['动作','正在前往震旦大厦']]],['reason','L2',[['空域','已检全路线'],['建筑','最小净距24.1m'],['取舍','东侧距离更短']]],['projection','L3',[['方案对比',comparison],['条件','按计划速度'],['表现','暂无既往记录']]]]);
 const completed=check('completed N1 prediction audit',[['action','L1',[['目标','已到B']]],['reason','L2',[['记录','4/4记录已保存']]],['projection','L3 预测核对',[['核对','预计122.7秒 / 实际122.7秒'],['余电','终点余电预计79.4% / 实际79.4%'],['表现','累计4段实际记录']]]],{status:'complete'});
-assert(completed[2][2].every(x=>x[0]==='表现'),'completed facts are past performance, not future forecasts');
+assert(completed[2][2].every(x=>!['预测','预计','抵达'].includes(x[0])),'completed facts are past performance, not future forecasts');
+assert.deepEqual(completed[2][2].map(x=>x[0]),['核对','余电','记录'],'time audit, battery audit and execution history remain distinct');
 const manual=check('manual forecast invalidation',[['action','L1',[['行动','手动接管']]],['reason','L2',[['恢复','恢复前重新检查']]],['projection','L3',[['原预测','旧路线预测已停止适用'],['局限','操控会改变运动']]]],{status:'manual'});
-assert.equal(manual[2][2][0][0],'局限');
+assert.notEqual(manual[2][2][0][0],'预测','an invalidated old forecast is not a current prediction');
+assert.equal(manual[2][2][0][0],'基准');
 check('unknown source labels use SAT categories, not leaked legacy labels',Object.entries(headings).map(([key,title])=>[key,title,[['未来扩展字段','该字段的原始内容']]]));
+
+// Exact shape of the reported screenshot: both execution progress and track
+// deviation used to become 状态, while the two checks both became 检查.
+const screenshot=[
+ ['action',headings.action,[['行动','正在沿路线A前往建筑巡检点'],['进展','剩余1013m · 当前执行中'],['表现','航迹偏差0.0m']]],
+ ['reason',headings.reason,[['判断','当前检查未发现需要避让的动态冲突'],['航段','当前航线已检查，最小建筑间隔22.4m（要求≥16.9m）'],['依据','按既定任务顺序继续前往目标点']]],
+ ['projection',headings.projection,[['预计','102秒后到建筑巡检点 · 余电80.3%'],['局限','仅依据当前已知环境；未计风况及转弯动力学'],['表现','此前暂无本次避让记录']]],
+];
+const screenshotOutput=check('reported N4 duplicate labels',screenshot,{status:'review'});
+assert.deepEqual(screenshotOutput[0][2].map(x=>x[0]),['计划','进展','跟踪']);
+assert.deepEqual(screenshotOutput[1][2].map(x=>x[0]),['结论','检查','依据']);
+assert.notEqual(screenshotOutput[0][2][1][0],screenshotOutput[0][2][2][0],'execution progress and current tracking have distinct labels');
+assert.notEqual(screenshotOutput[1][2][0][0],screenshotOutput[1][2][1][0],'conflict judgement and checked flight leg have distinct labels');
 
 // Actual N1 presenter: task configuration, arrival, save and completion.
 const photoRoute=[[0,0],[120,0],[240,0],[360,0],[480,0],[600,0]],photoTasks=photoRoute.slice(1,5).map((point,i)=>({id:'photo-'+i,targetName:['震旦大厦','未来资产','香格里拉','东方明珠'][i],point,photoRequirement:'人工确认构图'}));
@@ -82,7 +103,7 @@ for(const [name,overrides,missionOverride] of [
  ['executing',{resourceDetected:true,resourceCompleted:['P4'],resourceCancelled:['P5']},{}],
  ['landing',{landing:{targetAltitude:0},resourceCompleted:['P4'],resourceCancelled:['P5'],resourceLandingCheck:{valid:true,atE:true}},{}],
  ['landed',{status:'complete',landed:true,resourceCompleted:['P4'],resourceCancelled:['P5'],resourceResult:{duration:120,prediction:{at:0,seconds:110,endBattery:17}},resourceLandingCheck:{valid:true}},{}],
-]){const state={...resourceBase,...overrides},raw=Resource.describe({state,mission:{...resourceMission,...missionOverride},evidence:resourceEvidence,landingForecast:{seconds:20,cost:.2}}),out=check('N5 '+name,raw,{status:state.status,landed:!!state.landed});if(name==='normal')assert.deepEqual(out[2][2].map(x=>x[0]),['预测','预测','局限']);if(name==='landed')assert(out[2][2].every(x=>x[0]==='表现'));}
+]){const state={...resourceBase,...overrides},raw=Resource.describe({state,mission:{...resourceMission,...missionOverride},evidence:resourceEvidence,landingForecast:{seconds:20,cost:.2}}),out=check('N5 '+name,raw,{status:state.status,landed:!!state.landed});if(name==='normal'){assert.notEqual(out[2][2][0][0],out[2][2][1][0],'completion time and arrival charge are distinct prediction fields');assert.equal(out[2][2][2][0],'局限');}if(name==='landed')assert(out[2][2].every(x=>!['预测','预计','抵达'].includes(x[0])));}
 
 // Browser delivery: same pure helper is available to the real cockpit.
 const source=fs.readFileSync(require.resolve('./dist/sat-labels'),'utf8'),browser={};vm.createContext(browser);vm.runInContext(source,browser);
