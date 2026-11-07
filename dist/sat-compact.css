@@ -1,4 +1,7 @@
 /* Shared AOI and typography for every transparency condition. */
+.sat-line>.sat-value{flex:1;min-width:0}
+.sat-value>.sat-task-flow,.sat-value>.free-route-flow{width:100%;min-width:0}
+.sat-field-item,.sat-field-separator{font:inherit;color:inherit}
 .copilot.sat-compact{top:76px;right:16px;width:440px;height:552px;max-height:calc(100dvh - 92px);min-height:0;padding:12px;overflow:visible;background:#14211ff5;display:flex;flex-direction:column;border-radius:10px}
 .sat-compact .section-head{height:28px;min-height:28px;margin:0 0 8px;font-size:16px;gap:8px}
 #satState{font-size:14px;color:#c4dbbf;margin-left:auto;white-space:nowrap}
