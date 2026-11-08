@@ -1,0 +1,7 @@
+/* N1 inline facts: inherit all existing dimensions and experimental emphasis. */
+body.n1-active .sat-value .n1-key-target{color:#ffdb7b}
+body.n1-active .sat-value .n1-key-success{color:#b5ed98}
+body.n1-active .sat-value .n1-key-forecast{color:#9fd4ff}
+body.n1-active .sat-value .n1-key-warning{color:#ffce82}
+body.n1-active .sat-value .n1-key-danger{color:#ff9389}
+body.n1-active .sat-value .n1-key-muted{color:#a5b5ae}

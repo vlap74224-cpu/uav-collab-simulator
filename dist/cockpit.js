@@ -164,14 +164,16 @@ function rawFreeSatInformation(){
 }
 function renderFreeRouteFlow(node,flow){const key=JSON.stringify(flow);if(node.dataset.flowKey===key)return;node.dataset.flowKey=key;node.replaceChildren();flow.items.forEach((item,index)=>{if(index)node.append(el('span','→',{class:'free-flow-arrow','aria-hidden':'true'}));node.append(el('span',item.label+(item.tag?'〔'+item.tag+'〕':''),{class:item.highlight?'free-flow-stop free-changed-value':'free-flow-stop','data-free-via-id':item.id}));});}
 function renderSatFieldValue(node,value){
- const key=JSON.stringify(value);if(node.dataset.satValueKey===key)return;node.dataset.satValueKey=key;node.replaceChildren();
+ const slot=node.dataset.satValue||'',key=JSON.stringify([mission?.id,slot,value]);if(node.dataset.satValueKey===key)return;node.dataset.satValueKey=key;node.replaceChildren();
  const append=(item,index=0)=>{
   if(index)node.append(el('span','；',{class:'sat-field-separator'}));
   if(item?.kind==='sat-field-values'){item.items.forEach(append);return;}
   if(item?.kind==='photo-flow'){const flow=el('div','',{class:'sat-task-flow',role:'list'});renderPhotoFlow(flow,item);node.append(flow);return;}
   if(item?.kind==='free-route-flow'){const flow=el('div','',{class:'free-route-flow'});renderFreeRouteFlow(flow,item);node.append(flow);return;}
   if(item&&typeof item==='object'){const grid=el('div','',{class:'sat-compare'}),a=el('div',''),b=el('div','');a.append(el('span','原方案'),el('b',item.original,{class:'compare-original'}));b.append(el('span',(item.label||'建议方案').replace('方案',''),{class:'compare-label'}),el('b',item.suggested,{class:'compare-suggested'}));grid.append(a,b);node.append(grid);return;}
-  node.append(el('span',item??'',{class:'sat-field-item'}));
+  if(mission?.id==='N1'&&window.N1Emphasis){
+   for(const part of window.N1Emphasis.segments(item??'',{slot,mission}))node.append(el('span',part.text,{class:'sat-field-item'+(part.tone?' n1-key-'+part.tone:'')}));
+  }else node.append(el('span',item??'',{class:'sat-field-item'}));
  };
  if(value?.kind==='sat-field-values')value.items.forEach(append);else append(value);
 }
