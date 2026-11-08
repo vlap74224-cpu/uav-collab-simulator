@@ -162,18 +162,20 @@ function rawFreeSatInformation(){
  const threshold=Math.ceil((window.UAVSafetyBoundary?.horizontalLimits(draft?.speed??state.speed).warning??21.8)*10)/10,content=FreeRouteInfo.describe({state,mission,draft,position:currentPosition(),inspector:routeInspector,ready:!!window.worldReady,threshold,errors:satCheckErrors,records,participant:session.participant});
  const u=state.freeRouteUpdate;if(u?.presentedAt&&!u.informationLogged){u.informationLogged=true;log('free_route_information_presented','多点路线更新信息已呈现',JSON.stringify({version:u.version,changedLegs:u.changedLegs,checks:state.freePanelCheck,content}));}return content;
 }
-function renderFreeRouteFlow(node,flow){const key=JSON.stringify(flow);if(node.dataset.flowKey===key)return;node.dataset.flowKey=key;node.replaceChildren();flow.items.forEach((item,index)=>{if(index)node.append(el('span','→',{class:'free-flow-arrow','aria-hidden':'true'}));node.append(el('span',item.label+(item.tag?'〔'+item.tag+'〕':''),{class:item.highlight?'free-flow-stop free-changed-value':'free-flow-stop','data-free-via-id':item.id}));});}
+function renderFreeRouteFlow(node,flow){const key=JSON.stringify(flow);if(node.dataset.flowKey===key)return;node.dataset.flowKey=key;node.replaceChildren();flow.items.forEach((item,index)=>{if(index)node.append(el('span','→',{class:'free-flow-arrow','aria-hidden':'true'}));node.append(el('span',item.label+(item.tag?'〔'+item.tag+'〕':''),{class:'free-flow-stop'+(item.highlight?' free-changed-value':'')+(window.SatEmphasis&&item.id!=='origin'?' sat-key-'+(/未选择|尚未/.test(item.label)?'muted':item.tag?'warning':'target'):''),'data-free-via-id':item.id}));});}
 function renderSatFieldValue(node,value){
  const slot=node.dataset.satValue||'',key=JSON.stringify([mission?.id,slot,value]);if(node.dataset.satValueKey===key)return;node.dataset.satValueKey=key;node.replaceChildren();
+ const emphasis=window.SatEmphasis||(mission?.id==='N1'?window.N1Emphasis:null),inline=(parent,item,field=slot)=>{
+  if(emphasis)for(const part of emphasis.segments(item??'',{slot:field,mission}))parent.append(el('span',part.text,{class:'sat-field-item'+(part.tone?' '+(mission?.id==='N1'?'n1-key-':'sat-key-')+part.tone:'')}));
+  else parent.append(el('span',item??'',{class:'sat-field-item'}));
+ };
  const append=(item,index=0)=>{
   if(index)node.append(el('span','；',{class:'sat-field-separator'}));
   if(item?.kind==='sat-field-values'){item.items.forEach(append);return;}
   if(item?.kind==='photo-flow'){const flow=el('div','',{class:'sat-task-flow',role:'list'});renderPhotoFlow(flow,item);node.append(flow);return;}
   if(item?.kind==='free-route-flow'){const flow=el('div','',{class:'free-route-flow'});renderFreeRouteFlow(flow,item);node.append(flow);return;}
-  if(item&&typeof item==='object'){const grid=el('div','',{class:'sat-compare'}),a=el('div',''),b=el('div','');a.append(el('span','原方案'),el('b',item.original,{class:'compare-original'}));b.append(el('span',(item.label||'建议方案').replace('方案',''),{class:'compare-label'}),el('b',item.suggested,{class:'compare-suggested'}));grid.append(a,b);node.append(grid);return;}
-  if(mission?.id==='N1'&&window.N1Emphasis){
-   for(const part of window.N1Emphasis.segments(item??'',{slot,mission}))node.append(el('span',part.text,{class:'sat-field-item'+(part.tone?' n1-key-'+part.tone:'')}));
-  }else node.append(el('span',item??'',{class:'sat-field-item'}));
+  if(item&&typeof item==='object'){const grid=el('div','',{class:'sat-compare'}),a=el('div',''),b=el('div',''),original=el('b','',{class:'compare-original'}),suggested=el('b','',{class:'compare-suggested'});inline(original,item.original,'projection-0');inline(suggested,item.suggested,'projection-0');a.append(el('span','原方案'),original);b.append(el('span',(item.label||'建议方案').replace('方案',''),{class:'compare-label'}),suggested);grid.append(a,b);node.append(grid);return;}
+  inline(node,item);
  };
  if(value?.kind==='sat-field-values')value.items.forEach(append);else append(value);
 }
