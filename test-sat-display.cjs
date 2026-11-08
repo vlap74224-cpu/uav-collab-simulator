@@ -17,7 +17,9 @@ class DomNode{
  setAttribute(key,value){this.attributes[key]=String(value);if(key==='hidden')this._hidden=true;if(key.startsWith('data-'))this.dataset[key.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=String(value);}
  getAttribute(key){return this.attributes[key]??null;}
  addEventListener(type,handler){const list=this.events.get(type)||[];list.push(handler);this.events.set(type,list);}
- click(){for(const handler of this.events.get('click')||[])handler({currentTarget:this,target:this});}
+ dispatchEvent(event){if(!event.target)event.target=this;for(let node=this;node;node=node.parentElement){event.currentTarget=node;for(const handler of node.events.get(event.type)||[])handler(event);}}
+ click(){if(this.tag==='summary'&&this.parentElement?.tag==='details')this.parentElement.open=!this.parentElement.open;this.dispatchEvent({type:'click',target:this});}
+ focus(){this.focusCount=(this.focusCount||0)+1;}
  removeAttribute(key){delete this.attributes[key];if(key==='hidden')this._hidden=false;}
  get hidden(){return this._hidden;}
  set hidden(value){this._hidden=!!value;if(this._hidden)this.attributes.hidden='';else delete this.attributes.hidden;}
@@ -43,18 +45,24 @@ class DomNode{
  set innerHTML(value){throw Error('Visibility control must not rebuild source text as HTML');}
 }
 
-// Bind exactly the three explicit mode controls; mode selection never submits a
-// surrounding destination form or fires an AI acceptance action.
+// The details/summary picker uses the same three explicit modes, closes after
+// selection and supports dismissal without submitting an AI decision.
 {
- const body=new DomNode('body'),toolbar=new DomNode('div','',{id:'satDisplayControls'}),cards=new DomNode('div','',{id:'satCards'}),buttons=modes.map(mode=>new DomNode('button',Display.labels[mode],{'data-sat-display-mode':mode,type:'button'})),accept=new DomNode('button','接受');
- toolbar.append(...buttons);cards.append(...levels.map(level=>section(level)));body.append(toolbar,cards,accept);
- const document={body,querySelectorAll:selector=>body.querySelectorAll(selector)},seen=[],flight={progress:.35,simTime:50,n4Decision:{seconds:10,deadlineSimTime:60},planVersion:7};let accepted=0;
+ const body=new DomNode('body'),toolbar=new DomNode('details','',{id:'satDisplayControls'}),summary=new DomNode('summary','',{id:'satDisplayLabel'}),options=new DomNode('div','',{id:'satDisplayOptions'}),cards=new DomNode('div','',{id:'satCards'}),buttons=modes.map(mode=>new DomNode('button',Display.labels[mode],{'data-sat-display-mode':mode,type:'button'})),accept=new DomNode('button','接受'),outside=new DomNode('button','其他控件');
+ options.append(...buttons);toolbar.append(summary,options);toolbar.open=false;cards.append(...levels.map(level=>section(level)));body.append(toolbar,cards,accept,outside);
+ const document={body,querySelectorAll:selector=>body.querySelectorAll(selector),addEventListener:(type,handler)=>body.addEventListener(type,handler)},seen=[],flight={progress:.35,simTime:50,n4Decision:{seconds:10,deadlineSimTime:60},planVersion:7};let accepted=0;
  accept.addEventListener('click',()=>accepted++);Display.bind(document,mode=>{seen.push(mode);Display.apply(document,mode);});
+ Display.apply(document,'l123');assert.equal(summary.textContent,Display.labels.l123,'closed picker shows the current default selection');assert.equal(toolbar.open,false);
  const before=JSON.stringify(flight);
  for(const [index,mode]of modes.entries()){
-  buttons[index].click();assert.deepEqual(visibleLevels(body),expected[mode]);assert.equal(body.getAttribute('data-sat-display'),mode);assert.deepEqual(buttons.map(button=>button.getAttribute('aria-pressed')),modes.map(value=>String(value===mode)));assert.equal(accepted,0);assert.equal(JSON.stringify(flight),before);
+  const count=seen.length;summary.click();assert.equal(toolbar.open,true,'summary opens the dropdown');assert.equal(seen.length,count,'opening the picker does not change display mode');options.click();assert.equal(toolbar.open,true,'clicking inside the options keeps the dropdown open');
+  buttons[index].click();assert.equal(toolbar.open,false,'selecting a depth closes the dropdown');assert.equal(summary.textContent,Display.labels[mode],'selected mode appears in the summary');assert.equal(summary.getAttribute('aria-label'),'AI信息显示层级：'+Display.labels[mode]);assert.equal(summary.focusCount,index+1,'selection returns focus to the dropdown summary');assert.equal(seen.length,count+1,'one choice invokes exactly one change callback');
+  assert.deepEqual(visibleLevels(body),expected[mode]);assert.equal(body.getAttribute('data-sat-display'),mode);assert.deepEqual(buttons.map(button=>button.getAttribute('aria-pressed')),modes.map(value=>String(value===mode)));assert.equal(accepted,0);assert.equal(JSON.stringify(flight),before);
  }
- assert.deepEqual(seen,modes);accept.click();assert.equal(seen.length,3,'unrelated decision buttons are not display controls');
+ assert.deepEqual(seen,modes);summary.click();outside.click();assert.equal(toolbar.open,false,'a click outside dismisses the dropdown');assert.equal(seen.length,3,'outside dismissal cannot submit a mode change');assert.equal(summary.focusCount,3,'outside dismissal does not steal focus back from the clicked control');
+ summary.click();let prevented=false;body.dispatchEvent({type:'keydown',key:'ArrowDown',preventDefault(){throw Error('unrelated keys are not intercepted');}});assert.equal(toolbar.open,true,'a non-Escape key leaves the picker open');body.dispatchEvent({type:'keydown',key:'Escape',preventDefault(){prevented=true;}});assert.equal(toolbar.open,false,'Escape dismisses an open picker');assert(prevented);assert.equal(summary.focusCount,4,'Escape returns keyboard focus to the summary');assert.equal(seen.length,3);
+ Display.apply(document,'l12');assert.equal(summary.textContent,Display.labels.l12,'restoring a saved selection updates the label without opening or selecting');assert.equal(toolbar.open,false);assert.equal(seen.length,3,'restoring state does not invent a click event');
+ accept.click();assert.equal(seen.length,3,'unrelated decision buttons are not display controls');assert.equal(accepted,1);
 }
 function section(level,text='本段实际信息'){const node=new DomNode('section',text,{'data-level':level,class:'sat-section'});return node;}
 function visibleLevels(root){return root.querySelectorAll('[data-level]').filter(node=>!node.hidden).map(node=>node.dataset.level);}
@@ -105,23 +113,23 @@ class MemoryStorage{
 // A display change is a separate observational event, never an accept/modify or
 // a fresh decision window, even in a running N4 encounter.
 {
- const root=new DomNode('body'),cards=new DomNode('div','',{id:'satCards'}),toolbar=new DomNode('div','',{id:'satDisplayControls'});cards.append(...levels.map(key=>section(key)));
- const buttons=modes.map(mode=>new DomNode('button',Display.labels[mode],{'data-sat-display-mode':mode,type:'button'}));toolbar.append(...buttons);root.append(toolbar,cards);
+ const root=new DomNode('body'),cards=new DomNode('div','',{id:'satCards'}),toolbar=new DomNode('details','',{id:'satDisplayControls'}),summary=new DomNode('summary','',{id:'satDisplayLabel'}),options=new DomNode('div','',{id:'satDisplayOptions'});cards.append(...levels.map(key=>section(key)));
+ const buttons=modes.map(mode=>new DomNode('button',Display.labels[mode],{'data-sat-display-mode':mode,type:'button'}));options.append(...buttons);toolbar.append(summary,options);root.append(toolbar,cards);toolbar.open=false;
  const prefs={participant:'P007',condition:'reason',node:'N4',subtype:'dynamic',n2DecisionSeconds:25,satDisplayMode:'l123',custom:'preserve-me'},storage=new MemoryStorage({'uav-research-config-v1':JSON.stringify(prefs)});
  const state={status:'running',progress:.4,simTime:80,speed:12,altitude:60,battery:81,planVersion:6,presentedAt:1000,route:[[0,0],[100,100]],n4Decision:{status:'active',seconds:12,startedAtSimTime:77,deadlineSimTime:92},noFlyDecision:{status:'active',seconds:12,deadline:1700000012000}},mission={id:'N4',candidateRoute:[[0,0],[50,70],[100,100]]},session={id:'session',participant:'P007',condition:'reason',node:'N4',satDisplayMode:'l123'},records=[],toasts=[];
  const ctx={state,mission,session,records,trial:'trial',VERSION:'test',KEY:'uav-collab-v1',LEGACY_KEY:'uav-before-lujiazui-v4',recordLease:{generation:'fixture'},window:{SatDisplay:Display},document:{body:root,querySelectorAll:selector=>root.querySelectorAll(selector)},localStorage:storage,M:{categories:{N1:{},N2:{},N4:{},N5:{}}},C:{clone:value=>JSON.parse(JSON.stringify(value))},crypto:{randomUUID:()=>Math.random().toString(16).slice(2)},recordsWritable:()=>true,syncRecordClear(){throw Error('valid display click cannot clear records');},toast:text=>toasts.push(text),Date};
  vm.createContext(ctx);vm.runInContext(extract(cockpit,'function config(','function fresh(')+extract(cockpit,'function snap(','let toastTimer;'),ctx);
  Display.bind(ctx.document,ctx.setSatDisplayMode);ctx.syncSatDisplayMode();const before=JSON.stringify(state),plan=JSON.stringify(mission);
  for(const [index,mode]of modes.entries()){
-  const previous=ctx.currentSatDisplayMode(),count=records.length;buttons[index].click();
-  assert.equal(session.satDisplayMode,mode);assert.deepEqual(visibleLevels(root),expected[mode]);assert.equal(JSON.stringify(state),before,'live flight/decision state remains byte-for-byte intact');assert.equal(JSON.stringify(mission),plan,'candidate route and scheme are untouched');
+  const previous=ctx.currentSatDisplayMode(),count=records.length;summary.click();assert.equal(toolbar.open,true);buttons[index].click();
+  assert.equal(session.satDisplayMode,mode);assert.equal(toolbar.open,false,'actual application selection closes the picker');assert.equal(summary.textContent,Display.labels[mode],'actual recording handler updates the selected label');assert.deepEqual(visibleLevels(root),expected[mode]);assert.equal(JSON.stringify(state),before,'live flight/decision state remains byte-for-byte intact');assert.equal(JSON.stringify(mission),plan,'candidate route and scheme are untouched');
   assert.equal(records.length,count+(previous===mode?0:1),'exactly one separate mode event per actual change');
   const record=records.at(-1);if(previous!==mode){assert.equal(record.type,'sat_display_change');assert.equal(record.satDisplayMode,mode);assert.deepEqual(Array.from(record.visibleSatLevels),expected[mode]);const detail=JSON.parse(record.detail);assert.equal(detail.previous,previous);assert.equal(detail.current,mode);assert.equal(record.before.session.satDisplayMode,previous);assert.equal(record.after.session.satDisplayMode,mode);assert.equal(record.reactionMs,null,'mode selection is not an accepted decision');}
   const saved=JSON.parse(storage.getItem('uav-collab-v1'));assert.equal(saved.session.satDisplayMode,mode);assert.equal(saved.state.n4Decision.deadlineSimTime,92);assert.equal(saved.state.noFlyDecision.deadline,1700000012000);
   assert.deepEqual(JSON.parse(storage.getItem('uav-research-config-v1')),{...prefs,satDisplayMode:mode},'mode preference merges instead of overwriting experiment settings');assert.equal(ctx.config().satDisplayMode,mode,'new-session configuration restores the saved selection');
  }
  const count=records.length;buttons[2].click();assert.equal(records.length,count,'reselecting the active option does not create duplicate mode events');
- ctx.session={...session,satDisplayMode:undefined};assert.equal(ctx.currentSatDisplayMode(),'l123','old sessions inherit the configured default');ctx.session.satDisplayMode='l1';assert.equal(ctx.currentSatDisplayMode(),'l1','saved active session takes precedence over next-session settings');
+ ctx.session={...session,satDisplayMode:undefined};assert.equal(ctx.currentSatDisplayMode(),'l123','old sessions inherit the configured default');ctx.session.satDisplayMode='l1';assert.equal(ctx.currentSatDisplayMode(),'l1','saved active session takes precedence over next-session settings');ctx.syncSatDisplayMode();assert.equal(summary.textContent,Display.labels.l1,'restoring the saved active session also restores the dropdown label');
  storage.failWrite=true;ctx.setSatDisplayMode('l12');assert.equal(ctx.session.satDisplayMode,'l12','unavailable preferences do not prevent in-memory switching');assert(toasts.some(text=>text.includes('未能保存')),'failed preference persistence is stated honestly');
  const latest=ctx.currentSatDisplayMode(),lastCount=records.length;ctx.recordsWritable=()=>false;let cleared=0;ctx.syncRecordClear=()=>cleared++;ctx.setSatDisplayMode('l1');assert.equal(cleared,1);assert.equal(ctx.currentSatDisplayMode(),latest);assert.equal(records.length,lastCount,'a cleared writer cannot log or revive an old session through a display button');
 }
@@ -140,8 +148,9 @@ class MemoryStorage{
 const html=fs.readFileSync('dist/index.html','utf8'),admin=fs.readFileSync('dist/admin.html','utf8');
 assert(html.indexOf('sat-display.js')<html.indexOf('src="cockpit.js'),'visibility module loads before cockpit hooks');
 for(const mode of modes)assert(html.includes('data-sat-display-mode="'+mode+'"'),'each cumulative depth has a real user-facing button');
-assert(html.includes('aria-label="AI信息显示层级"'));assert(admin.includes('id="adminSatDisplay"'),'researcher can configure the next session display depth');
+assert(html.includes('<details id="satDisplayControls"'),'display control is a native expandable picker like flight mode');assert(html.includes('<summary id="satDisplayLabel"'),'closed picker has one current-mode summary');assert(html.includes('id="satDisplayOptions"'));assert(html.includes('aria-label="选择AI信息显示层级"'));assert(admin.includes('id="adminSatDisplay"'),'researcher can configure the next session display depth');
 assert(cockpit.includes('window.SatDisplay.bind(document,setSatDisplayMode)'),'the production control group is bound to the actual recording handler');
 
 console.log('PASS cumulative SAT display: default/all modes, exact facts and nine fields retained, decision buttons independent, '+presentations+' shipped node/condition render-and-refresh cases');
 console.log('PASS actual display buttons and handlers: mode-only log, unchanged deadlines/plans/flight, preferences/session restoration, failure handling and real N2 editor visibility');
+console.log('PASS dropdown picker: open/select/close, selected label and restored session, one callback per choice, outside-click/Escape dismissal and focus return');

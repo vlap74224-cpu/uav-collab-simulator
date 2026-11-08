@@ -15,8 +15,14 @@
    const shown=visible(level,mode);section.hidden=!shown;section.setAttribute('aria-hidden',String(!shown));
   }
   for(const button of root.querySelectorAll('[data-sat-display-mode]'))button.setAttribute('aria-pressed',String(button.getAttribute('data-sat-display-mode')===mode));
+  const label=root.querySelectorAll('#satDisplayLabel')[0];if(label){label.textContent=labels[mode];label.setAttribute('aria-label','AI信息显示层级：'+labels[mode]);}
   return mode;
  }
- function bind(root,onChange){for(const button of root.querySelectorAll('[data-sat-display-mode]'))button.addEventListener('click',()=>onChange(normalize(button.getAttribute('data-sat-display-mode'))));}
+ function bind(root,onChange){
+  const picker=root.querySelectorAll('#satDisplayControls')[0],label=root.querySelectorAll('#satDisplayLabel')[0];
+  for(const button of root.querySelectorAll('[data-sat-display-mode]'))button.addEventListener('click',()=>{onChange(normalize(button.getAttribute('data-sat-display-mode')));if(picker)picker.open=false;label?.focus?.();});
+  root.addEventListener?.('click',event=>{if(!picker?.open)return;for(let node=event.target;node;node=node.parentElement)if(node===picker)return;picker.open=false;});
+  root.addEventListener?.('keydown',event=>{if(event.key==='Escape'&&picker?.open){picker.open=false;event.preventDefault();label?.focus?.();}});
+ }
  return Object.freeze({modes,labels,normalize,visible,apply,bind});
 });

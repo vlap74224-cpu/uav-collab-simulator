@@ -1,7 +1,16 @@
 /* The selector shares the top bar; it adds no height to the assistant rail. */
-#satDisplayControls{display:flex;align-items:center;gap:2px;flex-shrink:0;padding:2px;border:1px solid #ffffff30;border-radius:6px;background:#13251fd9}
-#satDisplayControls button{min-height:34px;padding:5px 9px;border:0;border-radius:4px;font-size:12px;line-height:20px;white-space:nowrap;color:#c6d5ca;background:transparent}
-#satDisplayControls button[aria-pressed=true]{color:#172319;background:#b5f67b;font-weight:600}
+#satDisplayControls{position:relative;flex-shrink:0;padding:0;margin:0;border:1px solid #ffffff30;border-radius:6px;background:#152321}
+#satDisplayControls>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px;padding:6px 10px;list-style:none;font-size:13px;line-height:20px;color:#eff5f0;cursor:pointer;white-space:nowrap}
+#satDisplayControls>summary::before{content:none}
+#satDisplayControls>summary::-webkit-details-marker{display:none}
+#satDisplayControls>summary::after{content:'▾'}
+#satDisplayControls[open]>summary::after{content:'▴'}
+.topbar:has(#satDisplayControls[open]){z-index:100}
+#satDisplayOptions{position:absolute;top:calc(100% + 5px);left:0;z-index:100;display:grid;min-width:180px;max-width:calc(100vw - 24px);gap:3px;padding:4px;border:1px solid #ffffff30;border-radius:6px;background:#152321;box-shadow:0 8px 24px #0005}
+#satDisplayControls:not([open])>#satDisplayOptions{display:none}
+#satDisplayOptions button{width:100%;min-height:40px;margin:0;padding:8px 10px;border:0;text-align:left;font-size:13px;line-height:20px;white-space:nowrap;color:#eff5f0;background:transparent}
+#satDisplayOptions button:hover{background:#39534a}
+#satDisplayOptions button[aria-pressed=true]{color:#172319;background:#b5f67b;font-weight:600}
 /* Keep each level's AOI and the decision buttons in place across conditions. */
 body[data-sat-display] #satCards>[data-level][hidden],
 body[data-sat-display] #n2EditNotice>[data-level][hidden],
@@ -11,6 +20,4 @@ body[data-sat-display=l12] #satCards>[data-level=projection],
 body[data-sat-display=l1] #n2EditNotice>[data-level=reason],body[data-sat-display=l1] #n2EditNotice>[data-level=projection],body[data-sat-display=l12] #n2EditNotice>[data-level=projection],
 body[data-sat-display=l1] #n4EditNotice>[data-level=reason],body[data-sat-display=l1] #n4EditNotice>[data-level=projection],body[data-sat-display=l12] #n4EditNotice>[data-level=projection]{visibility:hidden;pointer-events:none}
 .admin-page .session-fields{flex-wrap:wrap}
-@media(max-width:1300px){.topbar .signals{display:none}.topbar .battery{margin-left:auto}}
-@media(max-width:1000px){.topbar .top-mode{display:none}#satDisplayControls button{padding-inline:6px}}
 @media(max-width:600px){#satDisplayControls{position:fixed;top:calc(var(--app-viewport-top,0px) + 48px);left:50%;transform:translateX(-50%);z-index:30}}
