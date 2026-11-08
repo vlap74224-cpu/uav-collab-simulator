@@ -1,0 +1,11 @@
+.admin-page .admin-metrics{grid-template-columns:repeat(5,minmax(0,1fr))}
+.admin-page .log-heading{align-items:flex-start;flex-wrap:wrap}
+.admin-page .log-actions{flex-wrap:wrap}
+.admin-page .log-actions button{min-height:40px;font-size:12px}
+.admin-page .danger{color:#ffd3cd;background:#622f31;border-color:#bb7673}
+.admin-page .clear-note{color:#e2ba86}
+.admin-page .record-scope{padding-left:20px;color:#b6c9c2;font-size:13px;line-height:1.9}
+.admin-page .record-scope li{margin:8px 0}
+#recordResetNotice{position:fixed;z-index:3000;inset:auto 16px 20px;margin:auto;max-width:580px;padding:18px;border:1px solid #ffce82;border-radius:8px;background:#162824f5;color:#edf4ed;font:15px/1.6 system-ui,sans-serif;box-shadow:0 4px 25px #0005}
+#recordResetNotice button{display:block;margin-top:12px;padding:10px 16px;min-height:44px;cursor:pointer}
+@media(max-width:760px){.admin-page .admin-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-page .log-actions{width:100%}.admin-page .log-actions button{flex:1 1 45%}.admin-page .log-actions select{width:100%}}
