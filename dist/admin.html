@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>研究后台 · 航迹协作实验室</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="map-admin.css"><link rel="stylesheet" href="record-controls.css?v=records1"></head>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>研究后台 · 航迹协作实验室</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="map-admin.css"><link rel="stylesheet" href="record-controls.css?v=records1"><link rel="stylesheet" href="sat-display.css?v=sat-modes1"></head>
 <body class="admin-page">
 <header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">⌘</span><span>研究后台<small>UAV COLLAB / RESEARCH CONSOLE</small></span></a><a class="back-link" href="index.html">返回操作者界面 ↗</a></header>
 <main>
 <div class="admin-intro"><span class="eyebrow">RESEARCH WORKSPACE</span><h1>会话与操作记录</h1><p>记录保存在当前设备、当前浏览器，不会自动上传到服务器。换设备或浏览器后，需在原浏览器下载记录。</p></div>
 <section class="panel admin-config"><div><h2>下一会话设置</h2><p class="muted small">新任务生效；全程依次经过 A→B→C→D→P4→P5→E，记录覆盖 N1、N2、N4、N5。</p></div>
-<div class="session-fields"><label>参与者编号 <input id="adminParticipant" maxlength="32" value="P001"></label><label>SAT 侧重点 <select id="adminCondition"><option value="action">行动侧重 · SAT 1</option><option value="reason">理由侧重 · SAT 2</option><option value="projection">预测侧重 · SAT 3</option></select></label><label hidden>任务情境<select id="adminNode"><option value="N1">1 航迹跟随</option><option value="N2">2 航迹转向</option><option value="N34">3 避障／冲突处置</option><option value="N5">4 资源可行性下降</option></select></label><label id="subtypeLabel" hidden>避障子情境<select id="adminSubtype"><option value="static">静态障碍／限制区</option><option value="dynamic">动态交通冲突</option></select></label><label>N2 决策时限（真实秒）<input id="adminN2Seconds" type="number" min="5" max="60" step="1" value="15"></label><button id="saveConfig" class="primary">保存下一会话设置</button></div><p id="configStatus" role="status"></p></section>
+<div class="session-fields"><label>参与者编号 <input id="adminParticipant" maxlength="32" value="P001"></label><label>SAT 侧重点 <select id="adminCondition"><option value="action">行动侧重 · SAT 1</option><option value="reason">理由侧重 · SAT 2</option><option value="projection">预测侧重 · SAT 3</option></select></label><label>AI 显示层级<select id="adminSatDisplay"><option value="l1">仅 L1</option><option value="l12">L1＋L2</option><option value="l123" selected>L1＋L2＋L3</option></select></label><label hidden>任务情境<select id="adminNode"><option value="N1">1 航迹跟随</option><option value="N2">2 航迹转向</option><option value="N34">3 避障／冲突处置</option><option value="N5">4 资源可行性下降</option></select></label><label id="subtypeLabel" hidden>避障子情境<select id="adminSubtype"><option value="static">静态障碍／限制区</option><option value="dynamic">动态交通冲突</option></select></label><label>N2 决策时限（真实秒）<input id="adminN2Seconds" type="number" min="5" max="60" step="1" value="15"></label><button id="saveConfig" class="primary">保存下一会话设置</button></div><p id="configStatus" role="status"></p></section>
 <div class="admin-metrics"><div class="panel"><span>已记录会话</span><strong id="metricSessions">0</strong></div><div class="panel"><span>操作事件</span><strong id="metricEvents">0</strong></div><div class="panel"><span>选择操作</span><strong id="metricDecisions">0</strong></div><div class="panel"><span>已保存照片</span><strong id="metricPhotos">—</strong></div><div class="panel"><span>当前节点</span><strong id="metricNode">—</strong></div></div>
 <section class="panel log-panel">
 <div class="log-heading"><div><span class="eyebrow">EVENT EXPLORER</span><h2>事件明细与下载</h2></div><div class="log-actions"><select id="sessionFilter" aria-label="筛选会话"><option value="all">全部会话</option></select><button id="refresh">刷新</button><button id="adminCsv">下载 CSV（筛选）</button><button id="adminJson">下载 JSON（筛选）</button><button id="adminArchive" class="primary">下载完整记录包</button><button id="adminClear" class="danger">一键清空全部记录</button></div></div>
@@ -16,7 +16,7 @@
 </section>
 <section class="panel admin-config"><h2>目前记录什么</h2>
 <ul class="record-scope">
-<li><strong>身份与条件：</strong>参与者编号、会话及试次编号、节点、SAT 条件、程序版本。</li>
+<li><strong>身份与条件：</strong>参与者编号、会话及试次编号、节点、SAT 条件、显示层级、程序版本。</li>
 <li><strong>事件与操作：</strong>任务启停、建议与信息呈现、首次操作、接受／修改／拒绝、超时自动执行、保护处置、方案开始执行、地图和镜头操作。</li>
 <li><strong>时间与方案：</strong>实际时间、飞行时间、运行倍率、可用的决策用时、事件阶段与方案版本；操作来源保存在事件详情或状态快照中。</li>
 <li><strong>飞行快照：</strong>事件发生时的路线、位置与轨迹、高度、速度、电量、目标、进度，以及当时已计算的检查与预测结果。</li>
@@ -27,5 +27,5 @@
 <p>场景：用户提供的陆家嘴模型裁剪，树林及缓坡为实验补建。<a href="archives/before-lujiazui.zip" download>下载替换前源码存档</a> · <button id="legacyBackup">下载本浏览器旧任务存档</button></p>
 </section>
 </main>
-<script src="record-storage.js?v=records1"></script><script src="photo-evidence.js?v=records1"></script><script src="record-archive.js?v=records1"></script><script src="admin.js?v=records1"></script>
+<script src="record-storage.js?v=records1"></script><script src="photo-evidence.js?v=records1"></script><script src="record-archive.js?v=sat-modes1"></script><script src="admin.js?v=sat-modes1"></script>
 </body></html>

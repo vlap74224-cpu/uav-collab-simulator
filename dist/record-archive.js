@@ -3,7 +3,7 @@
  const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.RecordArchive=api;
 })(typeof window!=='undefined'?window:globalThis,function(){
  'use strict';
- const columns=['wallTimeMs','simRate','operationSource','simTime','reactionFlightSeconds','planVersion','eventId','eventPhase','id','version','timestamp','sessionId','participant','condition','trialId','node','obstacleSubtype','destination','goalDeferred','type','label','detail','reactionMs','before','after','stimulus','rationale'];
+ const columns=['wallTimeMs','simRate','operationSource','simTime','reactionFlightSeconds','planVersion','eventId','eventPhase','id','version','timestamp','sessionId','participant','condition','satDisplayMode','visibleSatLevels','trialId','node','obstacleSubtype','destination','goalDeferred','type','label','detail','reactionMs','before','after','stimulus','rationale'];
  const encoder=new TextEncoder(),MAX32=0xffffffff;
  const crcTable=Uint32Array.from({length:256},(_,index)=>{let n=index;for(let bit=0;bit<8;bit++)n=n&1?0xedb88320^(n>>>1):n>>>1;return n>>>0;});
  function crc32(bytes){let sum=MAX32;for(const byte of bytes)sum=crcTable[(sum^byte)&255]^(sum>>>8);return(sum^MAX32)>>>0;}
